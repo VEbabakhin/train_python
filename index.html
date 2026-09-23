@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Каталог — рабочий список</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --bg: #f8fafc;
+    --panel: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --accent: #2563eb;
+    --accent-2: #1d4ed8;
+    --border: #e2e8f0;
+    --border-2: #cbd5e1;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --warn: #f59e0b;
+  }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    font-size: 14px;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px 60px;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 22px;
+    margin: 0;
+  }
+  header .meta {
+    color: var(--muted);
+    font-size: 13px;
+  }
+  header .meta b { color: var(--text); }
+
+  /* Панель инструментов */
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  button.btn {
+    font-family: inherit;
+    font-size: 13.5px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-2);
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+    font-weight: 600;
+    transition: background .12s, border-color .12s, color .12s;
+  }
+  button.btn:hover { background: #f1f5f9; }
+  button.btn.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  button.btn.primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
+  button.btn.danger:hover {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: var(--danger);
+  }
+
+  /* Форма добавления */
+  .add-form {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    display: none;
+  }
+  .add-form.open { display: block; }
+  .add-form h3 {
+    margin: 0 0 12px 0;
+    font-size: 15px;
+  }
+  .add-form .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 640px) { .add-form .row { grid-template-columns: 1fr; } }
+  .add-form label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .add-form input, .add-form select {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .add-form input:focus, .add-form select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  }
+  .add-form .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  /* Поиск */
+  .search-wrap {
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .search-wrap input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  }
+
+  /* Секции */
+  .section {
+    margin-bottom: 26px;
+  }
+  .section-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    font-weight: 700;
+    margin: 0 0 10px 2px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .count {
+    background: #f1f5f9;
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* Строки таблицы */
+  .list {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .item {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+  }
+  .item:last-child { border-bottom: none; }
+  .item:hover { background: #f8fafc; }
+
+  .item .num {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .item .info { min-width: 0; }
+  .item .title {
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .item .title:hover { color: var(--accent); text-decoration: underline; }
+  .item .desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .item .url {
+    font-size: 11.5px;
+    color: #94a3b8;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    background: #f1f5f9;
+    color: var(--muted);
+  }
+  .tag.easy { background: #dcfce7; color: #166534; }
+  .tag.medium { background: #fef3c7; color: #854d0e; }
+  .tag.hard { background: #fee2e2; color: #991b1b; }
+  .tag.new { background: #dbeafe; color: #1e40af; }
+
+  .item .actions {
+    display: flex;
+    gap: 4px;
+    opacity: .35;
+    transition: opacity .12s;
+  }
+  .item:hover .actions { opacity: 1; }
+  .icon-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--muted);
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .icon-btn:hover {
+    background: #f1f5f9;
+    color: var(--text);
+    border-color: var(--border-2);
+  }
+  .icon-btn.danger:hover {
+    background: #fef2f2;
+    color: var(--danger);
+    border-color: #fca5a5;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 14px;
+    background: #fff;
+    border: 1px dashed var(--border-2);
+    border-radius: 10px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #0f172a;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Каталог тестов и тренажёров</h1>
+    <div class="meta">Всего: <b id="total">0</b> &nbsp;·&nbsp; разделов: <b id="sections-count">0</b></div>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn primary" id="btn-add">+ Добавить</button>
+    <button class="btn" id="btn-export">Экспорт в файл</button>
+    <button class="btn" id="btn-import">Импорт из файла</button>
+    <button class="btn danger" id="btn-clear">Очистить всё</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" />
+  </div>
+
+  <div class="add-form" id="add-form">
+    <h3 id="form-title">Новый материал</h3>
+    <div class="row">
+      <div>
+        <label for="f-title">Название *</label>
+        <input id="f-title" type="text" placeholder="Например: Python: циклы" />
+      </div>
+      <div>
+        <label for="f-section">Раздел</label>
+        <input id="f-section" type="text" placeholder="Python, Математика, …" list="sections-list" />
+        <datalist id="sections-list"></datalist>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label for="f-url">Ссылка (URL или имя файла) *</label>
+        <input id="f-url" type="text" placeholder="trainer1.html или https://…" />
+      </div>
+      <div>
+        <label for="f-level">Сложность</label>
+        <select id="f-level">
+          <option value="">— не указана —</option>
+          <option value="easy">лёгкий</option>
+          <option value="medium">средний</option>
+          <option value="hard">сложный</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label for="f-desc">Описание</label>
+      <input id="f-desc" type="text" placeholder="Коротко, что внутри" />
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="btn-save">Сохранить</button>
+      <button class="btn" id="btn-cancel">Отмена</button>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-left:auto;cursor:pointer;">
+        <input type="checkbox" id="f-new" /> метка NEW
+      </label>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Поиск по названию, описанию, разделу…" autocomplete="off" />
+  </div>
+
+  <div id="content"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   Хранилище (localStorage)
+   ------------------------------------------------------------
+   Ключ: 'catalog_items'
+   Формат: массив объектов
+     { id, title, desc, url, section, level, isNew }
+   ============================================================ */
+const STORAGE_KEY = 'catalog_items';
+
+let items = load();
+let editingId = null;
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function uid() {
+  return 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+/* ============================================================
+   UI
+   ============================================================ */
+const content     = document.getElementById('content');
+const searchInput = document.getElementById('search');
+const addForm     = document.getElementById('add-form');
+const formTitle   = document.getElementById('form-title');
+const fTitle      = document.getElementById('f-title');
+const fDesc       = document.getElementById('f-desc');
+const fUrl        = document.getElementById('f-url');
+const fSection    = document.getElementById('f-section');
+const fLevel      = document.getElementById('f-level');
+const fNew        = document.getElementById('f-new');
+const sectionsList= document.getElementById('sections-list');
+
+function levelLabel(level) {
+  if (level === 'easy')   return 'лёгкий';
+  if (level === 'medium') return 'средний';
+  if (level === 'hard')   return 'сложный';
+  return '';
+}
+
+function showToast(text) {
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function openAddForm(item = null) {
+  editingId = item ? item.id : null;
+  formTitle.textContent = item ? 'Редактирование' : 'Новый материал';
+  fTitle.value   = item ? (item.title   || '') : '';
+  fDesc.value    = item ? (item.desc    || '') : '';
+  fUrl.value     = item ? (item.url     || '') : '';
+  fSection.value = item ? (item.section || '') : '';
+  fLevel.value   = item ? (item.level   || '') : '';
+  fNew.checked   = item ? !!item.isNew : false;
+  addForm.classList.add('open');
+  fTitle.focus();
+}
+
+function closeAddForm() {
+  addForm.classList.remove('open');
+  editingId = null;
+}
+
+function saveForm() {
+  const title = fTitle.value.trim();
+  const url   = fUrl.value.trim();
+
+  if (!title) { showToast('Введите название'); fTitle.focus(); return; }
+  if (!url)   { showToast('Введите ссылку');   fUrl.focus();   return; }
+
+  const data = {
+    title,
+    desc:    fDesc.value.trim(),
+    url,
+    section: fSection.value.trim() || 'Без раздела',
+    level:   fLevel.value,
+    isNew:   fNew.checked,
+  };
+
+  if (editingId) {
+    const idx = items.findIndex(i => i.id === editingId);
+    if (idx >= 0) items[idx] = { ...items[idx], ...data };
+    showToast('Сохранено');
+  } else {
+    items.push({ id: uid(), ...data });
+    showToast('Добавлено');
+  }
+
+  save();
+  closeAddForm();
+  render(searchInput.value);
+}
+
+function deleteItem(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  if (!confirm('Удалить «' + item.title + '»?')) return;
+  items = items.filter(i => i.id !== id);
+  save();
+  render(searchInput.value);
+  showToast('Удалено');
+}
+
+async function copyUrl(url) {
+  // Если url относительный — превращаем в полный
+  let full = url;
+  if (!/^https?:\/\//i.test(url)) {
+    full = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + url;
+  }
+  try {
+    await navigator.clipboard.writeText(full);
+    showToast('Ссылка скопирована');
+  } catch (e) {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = full;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast('Ссылка скопирована'); }
+    catch (err) { showToast('Не удалось скопировать'); }
+    document.body.removeChild(ta);
+  }
+}
+
+/* ============================================================
+   Отрисовка
+   ============================================================ */
+function renderCard(item, index) {
+  const row = document.createElement('div');
+  row.className = 'item';
+
+  const num = document.createElement('div');
+  num.className = 'num';
+  num.textContent = String(index + 1).padStart(2, '0');
+  row.appendChild(num);
+
+  const info = document.createElement('div');
+  info.className = 'info';
+
+  const a = document.createElement('a');
+  a.className = 'title';
+  a.href = item.url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.textContent = item.title;
+  info.appendChild(a);
+
+  const tags = document.createElement('span');
+  tags.style.display = 'inline-flex';
+  tags.style.gap = '5px';
+  tags.style.marginLeft = '6px';
+  tags.style.verticalAlign = 'middle';
+
+  if (item.level) {
+    const t = document.createElement('span');
+    t.className = 'tag ' + item.level;
+    t.textContent = levelLabel(item.level);
+    tags.appendChild(t);
+  }
+  if (item.isNew) {
+    const t = document.createElement('span');
+    t.className = 'tag new';
+    t.textContent = 'new';
+    tags.appendChild(t);
+  }
+  if (tags.childNodes.length) a.appendChild(tags);
+
+  if (item.desc) {
+    const d = document.createElement('div');
+    d.className = 'desc';
+    d.textContent = item.desc;
+    d.title = item.desc;
+    info.appendChild(d);
+  }
+
+  const u = document.createElement('div');
+  u.className = 'url';
+  u.textContent = item.url;
+  u.title = item.url;
+  info.appendChild(u);
+
+  row.appendChild(info);
+
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'icon-btn';
+  copyBtn.title = 'Скопировать ссылку';
+  copyBtn.textContent = '🔗';
+  copyBtn.addEventListener('click', () => copyUrl(item.url));
+  actions.appendChild(copyBtn);
+
+  const editBtn = document.createElement('button');
+  editBtn.className = 'icon-btn';
+  editBtn.title = 'Редактировать';
+  editBtn.textContent = '✎';
+  editBtn.addEventListener('click', () => openAddForm(item));
+  actions.appendChild(editBtn);
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'icon-btn danger';
+  delBtn.title = 'Удалить';
+  delBtn.textContent = '✕';
+  delBtn.addEventListener('click', () => deleteItem(item.id));
+  actions.appendChild(delBtn);
+
+  row.appendChild(actions);
+  return row;
+}
+
+function render(query) {
+  const q = (query || '').trim().toLowerCase();
+  const filtered = q
+    ? items.filter(i =>
+        (i.title || '').toLowerCase().includes(q) ||
+        (i.desc || '').toLowerCase().includes(q) ||
+        (i.section || '').toLowerCase().includes(q) ||
+        (i.url || '').toLowerCase().includes(q))
+    : items.slice();
+
+  content.innerHTML = '';
+
+  // Обновляем счётчики
+  document.getElementById('total').textContent = items.length;
+
+  if (filtered.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    if (items.length === 0) {
+      empty.innerHTML = 'Список пуст. Нажмите <b>+ Добавить</b>, чтобы добавить первый материал.';
+    } else {
+      empty.textContent = 'Ничего не найдено по запросу.';
+    }
+    content.appendChild(empty);
+    document.getElementById('sections-count').textContent = 0;
+    return;
+  }
+
+  // Группировка по разделам (при поиске — плоский список)
+  if (q) {
+    const list = document.createElement('div');
+    list.className = 'list';
+    filtered.forEach((it, i) => list.appendChild(renderCard(it, i)));
+    content.appendChild(list);
+    document.getElementById('sections-count').textContent = 1;
+  } else {
+    const groups = {};
+    items.forEach(it => {
+      const s = it.section || 'Без раздела';
+      (groups[s] = groups[s] || []).push(it);
+    });
+
+    let idx = 0;
+    Object.keys(groups).forEach(name => {
+      const section = document.createElement('div');
+      section.className = 'section';
+
+      const title = document.createElement('div');
+      title.className = 'section-title';
+      title.innerHTML = `${escapeHtml(name)} <span class="count">${groups[name].length}</span>`;
+      section.appendChild(title);
+
+      const list = document.createElement('div');
+      list.className = 'list';
+      groups[name].forEach(it => list.appendChild(renderCard(it, idx++)));
+      section.appendChild(list);
+
+      content.appendChild(section);
+    });
+    document.getElementById('sections-count').textContent = Object.keys(groups).length;
+  }
+
+  // Обновляем datalist разделов
+  const allSections = [...new Set(items.map(i => i.section).filter(Boolean))].sort();
+  sectionsList.innerHTML = '';
+  allSections.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    sectionsList.appendChild(opt);
+  });
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/* ============================================================
+   Экспорт / импорт
+   ============================================================ */
+function onExport() {
+  const data = JSON.stringify(items, null, 2);
+  const blob = new Blob([data], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const d = new Date();
+  const stamp = d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+  a.download = 'catalog_' + stamp + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  showToast('Файл сохранён');
+}
+
+function onImportFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!Array.isArray(parsed)) throw new Error('not an array');
+      if (!confirm('Заменить текущий список (' + items.length + ' записей) данными из файла (' + parsed.length + ' записей)?')) return;
+      items = parsed.map(i => ({
+        id: i.id || uid(),
+        title: i.title || 'Без названия',
+        desc: i.desc || '',
+        url: i.url || '',
+        section: i.section || 'Без раздела',
+        level: i.level || '',
+        isNew: !!i.isNew,
+      }));
+      save();
+      render(searchInput.value);
+      showToast('Импортировано ' + items.length + ' записей');
+    } catch (err) {
+      showToast('Не удалось прочитать файл');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function onClear() {
+  if (items.length === 0) { showToast('Список уже пуст'); return; }
+  if (!confirm('Удалить все ' + items.length + ' записей? Рекомендую сначала сделать экспорт.')) return;
+  items = [];
+  save();
+  render(searchInput.value);
+  showToast('Список очищен');
+}
+
+/* ============================================================
+   Обработчики
+   ============================================================ */
+document.getElementById('btn-add').addEventListener('click', () => openAddForm());
+document.getElementById('btn-save').addEventListener('click', saveForm);
+document.getElementById('btn-cancel').addEventListener('click', closeAddForm);
+document.getElementById('btn-export').addEventListener('click', onExport);
+document.getElementById('btn-import').addEventListener('click', () => {
+  document.getElementById('import-file').click();
+});
+document.getElementById('btn-clear').addEventListener('click', onClear);
+document.getElementById('import-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) onImportFile(file);
+  e.target.value = '';
+});
+
+searchInput.addEventListener('input', () => render(searchInput.value));
+
+// Enter в форме → сохранить, Esc → закрыть
+addForm.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    saveForm();
+  }
+  if (e.key === 'Escape') closeAddForm();
+});
+
+render();
+</script>
+</body>
+</html>
