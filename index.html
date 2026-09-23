@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Python-тренажёр: арифметика и цифры числа</title>
+
+<!-- Pyodide -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+
+<!-- CodeMirror 5: ядро, тема, режим Python, автодополнение, автозакрытие скобок -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --bg: #eef2f7;
+    --panel: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --accent: #2563eb;
+    --accent-2: #1d4ed8;
+    --success: #16a34a;
+    --success-bg: #dcfce7;
+    --error: #dc2626;
+    --error-bg: #fee2e2;
+    --border: #e2e8f0;
+    --code-bg: #282a36;
+    --code-text: #f8f8f2;
+    --sidebar-bg: #0f172a;
+    --sidebar-text: #cbd5e1;
+  }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: 100vh;
+  }
+  @media (max-width: 860px) { .app { grid-template-columns: 1fr; } }
+
+  .sidebar {
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    padding: 20px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  @media (max-width: 860px) { .sidebar { position: static; height: auto; } }
+  .sidebar h1 { color: #fff; font-size: 17px; margin: 0 0 6px 0; line-height: 1.3; }
+  .sidebar .subtitle { font-size: 12.5px; color: #94a3b8; margin-bottom: 16px; }
+
+  .progress {
+    background: rgba(255,255,255,.08);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .progress b { color: #fff; }
+  .progress .bar {
+    height: 6px;
+    background: rgba(255,255,255,.12);
+    border-radius: 4px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .progress .bar > i {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #22c55e, #4ade80);
+    transition: width .3s ease;
+  }
+
+  .task-list { list-style: none; padding: 0; margin: 0; }
+  .task-list li { margin-bottom: 4px; }
+  .task-list button {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--sidebar-text);
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+    transition: background .15s;
+  }
+  .task-list button:hover { background: rgba(255,255,255,.06); }
+  .task-list button.active { background: var(--accent); color: #fff; }
+  .task-list .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,.1);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .task-list button.active .num { background: rgba(255,255,255,.25); }
+  .task-list button.solved .num { background: #16a34a; color: #fff; }
+  .task-list button.solved .num::after { content: "✓"; }
+  .task-list button.solved .num > span { display: none; }
+  .part-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #64748b;
+    margin: 14px 6px 6px;
+    font-weight: 600;
+  }
+
+  .main { padding: 24px 32px 60px; max-width: 1000px; }
+  @media (max-width: 860px) { .main { padding: 18px 16px 60px; } }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #f59e0b; flex-shrink: 0; }
+  .status-dot.ready { background: var(--success); }
+  .status-dot.error { background: var(--error); }
+
+  .task-header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .task-header h2 { font-size: 22px; margin: 0; line-height: 1.25; }
+  .badge {
+    font-size: 11.5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #e0f2fe;
+    color: #075985;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge.easy { background: #dcfce7; color: #166534; }
+  .badge.medium { background: #fef3c7; color: #854d0e; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 600;
+  }
+  .card p { margin: 0 0 10px 0; }
+  .card ol, .card ul { margin: 6px 0 12px 0; padding-left: 22px; }
+  .card li { margin: 3px 0; }
+
+  .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 13.5px;
+  }
+  .inline-code {
+    background: #f1f5f9;
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+  }
+
+  /* Красивая дробь в условии задачи */
+  .fraction {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    margin: 0 4px;
+    font-size: 15px;
+    line-height: 1.1;
+  }
+  .fraction .numerator {
+    padding: 0 6px 2px 6px;
+    border-bottom: 1.5px solid var(--text);
+  }
+  .fraction .denominator {
+    padding: 2px 6px 0 6px;
+  }
+
+  .example-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  @media (max-width: 640px) { .example-grid { grid-template-columns: 1fr; } }
+  .example-box {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .example-box .label {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .example-box pre {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: #0f172a;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* CodeMirror editor */
+  .editor-wrap {
+    background: var(--code-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #1e293b;
+  }
+  .editor-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #1e293b;
+    color: #94a3b8;
+    font-size: 12.5px;
+  }
+  .editor-bar .dots { display: flex; gap: 6px; }
+  .editor-bar .dots i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .editor-bar .dots i:nth-child(1) { background: #ef4444; }
+  .editor-bar .dots i:nth-child(2) { background: #f59e0b; }
+  .editor-bar .dots i:nth-child(3) { background: #22c55e; }
+
+  #code { display: none; }
+  .CodeMirror {
+    height: auto;
+    min-height: 220px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .CodeMirror-scroll { min-height: 220px; }
+
+  .CodeMirror-hints {
+    z-index: 100;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    border-radius: 8px;
+    border: 1px solid #1e293b;
+    background: #1e293b;
+    color: #e2e8f0;
+  }
+  .CodeMirror-hint { padding: 4px 10px; }
+  .CodeMirror-hint-active { background: var(--accent); color: #fff; }
+
+  .actions { display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
+  button.btn {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 18px;
+    border-radius: 9px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background .15s, transform .05s;
+  }
+  button.btn:active { transform: translateY(1px); }
+  button.btn.primary { background: var(--accent); color: #fff; }
+  button.btn.primary:hover { background: var(--accent-2); }
+  button.btn.secondary { background: #fff; color: var(--text); border-color: var(--border); }
+  button.btn.secondary:hover { background: #f8fafc; }
+  button.btn:disabled { opacity: .55; cursor: not-allowed; }
+
+  .output-block {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 46px;
+    margin-bottom: 14px;
+  }
+  .output-block.err { color: #fecaca; }
+
+  .test-list { list-style: none; padding: 0; margin: 0; }
+  .test-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+    border: 1px solid var(--border);
+    background: #fff;
+  }
+  .test-list li.ok { background: var(--success-bg); border-color: #86efac; }
+  .test-list li.fail { background: var(--error-bg); border-color: #fca5a5; }
+  .test-list li .icon { font-weight: 700; flex-shrink: 0; }
+  .test-list li.ok .icon { color: var(--success); }
+  .test-list li.fail .icon { color: var(--error); }
+
+  .test-detail { margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 640px) { .test-detail { grid-template-columns: 1fr; } }
+  .test-detail .box {
+    background: rgba(0,0,0,.04);
+    border-radius: 6px;
+    padding: 6px 9px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .test-detail .box .label {
+    font-family: inherit;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  /* Раскрывающийся блок с остальными тестами */
+  .details-tests {
+    margin-top: 12px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    background: #fafbfc;
+    overflow: hidden;
+  }
+  .details-tests > summary {
+    cursor: pointer;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    color: var(--muted);
+    font-weight: 600;
+    list-style: none;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .details-tests > summary::-webkit-details-marker { display: none; }
+  .details-tests > summary::before {
+    content: "▸";
+    display: inline-block;
+    transition: transform .15s ease;
+  }
+  .details-tests[open] > summary::before { transform: rotate(90deg); }
+  .details-tests > .body { padding: 0 12px 12px; }
+
+  .hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .footer-note { font-size: 12.5px; color: var(--muted); margin-top: 30px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h1>Python-тренажёр</h1>
+    <div class="subtitle">Арифметические операции и обработка цифр числа</div>
+
+    <div class="progress">
+      <div>Решено: <b id="progress-text">0 / 10</b></div>
+      <div class="bar"><i id="progress-bar"></i></div>
+    </div>
+
+    <div class="part-label">Часть 1. Арифметика</div>
+    <ul class="task-list" id="list-part1"></ul>
+
+    <div class="part-label">Часть 2. Цифры числа</div>
+    <ul class="task-list" id="list-part2"></ul>
+  </aside>
+
+  <main class="main">
+    <div class="status-bar">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Загрузка Python… это может занять несколько секунд при первом открытии.</span>
+    </div>
+
+    <div class="task-header">
+      <h2 id="task-title">Задача 1</h2>
+      <span class="badge" id="task-level">лёгкая</span>
+    </div>
+
+    <section class="card" id="task-body"></section>
+
+    <section class="card">
+      <h3>Решение</h3>
+      <div class="editor-wrap">
+        <div class="editor-bar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div>solution.py</div>
+        </div>
+        <textarea id="code" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="btn-run" disabled>Запустить код</button>
+        <button class="btn secondary" id="btn-check" disabled>Отправить на проверку</button>
+        <button class="btn secondary" id="btn-reset">Сбросить код</button>
+      </div>
+
+      <div class="output-block" id="output">Здесь появится результат запуска.</div>
+
+      <h3 style="margin-top:14px">Результаты тестов</h3>
+      <ul class="test-list" id="tests">
+        <li>Нажмите «Отправить на проверку», чтобы прогнать код по тестам.</li>
+      </ul>
+    </section>
+
+    <div class="footer-note">
+      Тренажёр работает полностью в браузере: Python — через Pyodide, редактор — CodeMirror.
+    </div>
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   Данные задач
+   ============================================================ */
+const TASKS = [
+  {
+    id: 1, part: 1,
+    title: "Основные арифметические операции",
+    level: "лёгкая",
+    body: `
+      <p>Даны два целых числа <span class="inline-code">a</span> и <span class="inline-code">b</span>. Выведите результаты всех основных арифметических операций над этими числами.</p>
+      <p><b>Порядок вывода:</b></p>
+      <ol>
+        <li>сумма;</li>
+        <li>разность;</li>
+        <li>произведение;</li>
+        <li>обычное деление;</li>
+        <li>целочисленное деление;</li>
+        <li>остаток от деления;</li>
+        <li>возведение в степень.</li>
+      </ol>
+      <p><b>Входные данные:</b> два целых числа <span class="inline-code">a</span> и <span class="inline-code">b</span> в одной строке.</p>
+      <p><b>Выходные данные:</b> семь чисел — по одному на каждой строке.</p>
+    `,
+    example: { input: "7 3", output: "10\n4\n21\n2.3333333333333335\n2\n1\n343" },
+    starter: "a, b = map(int, input().split())\n\n# ваш код ниже\n",
+    tests: [
+      { input: "7 3", expected: "10\n4\n21\n2.3333333333333335\n2\n1\n343" },
+      { input: "10 4", expected: "14\n6\n40\n2.5\n2\n2\n10000" },
+      { input: "5 5", expected: "10\n0\n25\n1.0\n1\n0\n3125" },
+      { input: "2 8", expected: "10\n-6\n16\n0.25\n0\n2\n256" }
+    ]
+  },
+  {
+    id: 2, part: 1,
+    title: "Сумма и среднее",
+    level: "лёгкая",
+    body: `
+      <p>Даны три целых числа. Найдите их сумму и среднее арифметическое.</p>
+      <p><b>Входные данные:</b> три целых числа в одной строке.</p>
+      <p><b>Выходные данные:</b> сумма и среднее арифметическое — каждое на своей строке.</p>
+    `,
+    example: { input: "4 5 6", output: "Сумма: 15\nСреднее: 5.0" },
+    starter: "a, b, c = map(int, input().split())\n\n# ваш код ниже\n",
+    tests: [
+      { input: "4 5 6", expected: "Сумма: 15\nСреднее: 5.0" },
+      { input: "1 2 3", expected: "Сумма: 6\nСреднее: 2.0" },
+      { input: "10 20 30", expected: "Сумма: 60\nСреднее: 20.0" },
+      { input: "1 1 2", expected: "Сумма: 4\nСреднее: 1.3333333333333333" }
+    ]
+  },
+  {
+    id: 3, part: 1,
+    title: "Секунды в часы, минуты, секунды",
+    level: "средняя",
+    body: `
+      <p>Дано целое число <span class="inline-code">N</span> — количество секунд. Переведите его в часы, минуты и секунды.</p>
+      <p><b>Входные данные:</b> одно целое число <span class="inline-code">N</span>.</p>
+      <p><b>Выходные данные:</b> результат в формате <span class="inline-code">&lt;часы&gt; ч &lt;минуты&gt; мин &lt;секунды&gt; с</span>.</p>
+      <p class="hint">Подсказка: в одном часе 3600 секунд, в одной минуте — 60.</p>
+    `,
+    example: { input: "3661", output: "1 ч 1 мин 1 с" },
+    starter: "n = int(input())\n\n# ваш код ниже\n",
+    tests: [
+      { input: "3661", expected: "1 ч 1 мин 1 с" },
+      { input: "0", expected: "0 ч 0 мин 0 с" },
+      { input: "59", expected: "0 ч 0 мин 59 с" },
+      { input: "7200", expected: "2 ч 0 мин 0 с" },
+      { input: "86399", expected: "23 ч 59 мин 59 с" }
+    ]
+  },
+  {
+    id: 4, part: 1,
+    title: "Прямоугольник",
+    level: "средняя",
+    body: `
+      <p>Даны целые стороны прямоугольника <span class="inline-code">a</span> и <span class="inline-code">b</span>. Найдите его периметр, площадь и длину диагонали.</p>
+      <p><b>Формулы:</b></p>
+      <ul>
+        <li>периметр: <span class="inline-code">P = 2 * (a + b)</span>;</li>
+        <li>площадь: <span class="inline-code">S = a * b</span>;</li>
+        <li>диагональ: <span class="inline-code">d = √(a² + b²)</span>.</li>
+      </ul>
+      <p>Для извлечения квадратного корня используйте модуль <span class="inline-code">math</span>:</p>
+      <pre class="mono" style="background:#f1f5f9;padding:8px 10px;border-radius:8px;margin:0 0 10px 0">import math\nd = math.sqrt(a ** 2 + b ** 2)</pre>
+      <p><b>Входные данные:</b> два целых числа <span class="inline-code">a</span> и <span class="inline-code">b</span>.</p>
+      <p><b>Выходные данные:</b> периметр, площадь и диагональ — каждое на своей строке.</p>
+    `,
+    example: { input: "3 4", output: "Периметр: 14\nПлощадь: 12\nДиагональ: 5.0" },
+    starter: "import math\n\na, b = map(int, input().split())\n\n# ваш код ниже\n",
+    tests: [
+      { input: "3 4", expected: "Периметр: 14\nПлощадь: 12\nДиагональ: 5.0" },
+      { input: "6 8", expected: "Периметр: 28\nПлощадь: 48\nДиагональ: 10.0" },
+      { input: "1 1", expected: "Периметр: 4\nПлощадь: 1\nДиагональ: 1.4142135623730951" },
+      { input: "5 12", expected: "Периметр: 34\nПлощадь: 60\nДиагональ: 13.0" }
+    ]
+  },
+  {
+    id: 5, part: 1,
+    title: "Значение выражения",
+    level: "средняя",
+    body: `
+      <p>Даны числа <span class="inline-code">x</span> и <span class="inline-code">y</span>. Вычислите значение выражения:</p>
+      <p style="font-size:16px;text-align:center;margin:14px 0">
+        <span class="fraction">
+          <span class="numerator">(x + y) · (x − y)</span>
+          <span class="denominator">x · y + 1</span>
+        </span>
+      </p>
+      <p><b>Входные данные:</b> два целых числа <span class="inline-code">x</span> и <span class="inline-code">y</span>. Гарантируется, что <span class="inline-code">x · y + 1 ≠ 0</span>.</p>
+      <p><b>Выходные данные:</b> одно число — значение выражения.</p>
+    `,
+    example: { input: "5 2", output: "1.9090909090909092" },
+    starter: "x, y = map(int, input().split())\n\n# ваш код ниже\n",
+    tests: [
+      { input: "5 2", expected: "1.9090909090909092" },
+      { input: "4 4", expected: "0.0" },
+      { input: "3 1", expected: "2.0" },
+      { input: "6 3", expected: "1.4210526315789473" }
+    ]
+  },
+  {
+    id: 6, part: 2,
+    title: "Сумма цифр трёхзначного числа",
+    level: "лёгкая",
+    body: `
+      <p>Дано трёхзначное число <span class="inline-code">n</span>. Найдите сумму его цифр.</p>
+      <p><b>Входные данные:</b> одно целое число <span class="inline-code">n</span>, <span class="inline-code">100 &le; n &le; 999</span>.</p>
+      <p><b>Выходные данные:</b> одно число — сумма цифр.</p>
+    `,
+    example: { input: "472", output: "13" },
+    starter: "n = int(input())\n\n# ваш код ниже\n",
+    tests: [
+      { input: "472", expected: "13" },
+      { input: "100", expected: "1" },
+      { input: "999", expected: "27" },
+      { input: "305", expected: "8" }
+    ]
+  },
+  {
+    id: 7, part: 2,
+    title: "Произведение цифр трёхзначного числа",
+    level: "лёгкая",
+    body: `
+      <p>Дано трёхзначное число <span class="inline-code">n</span>. Найдите произведение его цифр.</p>
+      <p><b>Входные данные:</b> одно целое число <span class="inline-code">n</span>, <span class="inline-code">100 &le; n &le; 999</span>.</p>
+      <p><b>Выходные данные:</b> одно число — произведение цифр.</p>
+    `,
+    example: { input: "253", output: "30" },
+    starter: "n = int(input())\n\n# ваш код ниже\n",
+    tests: [
+      { input: "253", expected: "30" },
+      { input: "100", expected: "0" },
+      { input: "999", expected: "729" },
+      { input: "234", expected: "24" }
+    ]
+  },
+  {
+    id: 8, part: 2,
+    title: "Количество цифр числа",
+    level: "средняя",
+    body: `
+      <p>Дано натуральное число <span class="inline-code">n</span>. Найдите количество цифр в числе.</p>
+      <p><b>Входные данные:</b> одно натуральное число <span class="inline-code">n</span>, <span class="inline-code">n &gt; 0</span>.</p>
+      <p><b>Выходные данные:</b> одно число — количество цифр.</p>
+      <p class="hint">Подсказка: используйте цикл <span class="inline-code">while</span>.</p>
+    `,
+    example: { input: "50781", output: "5" },
+    starter: "n = int(input())\n\n# ваш код ниже\n",
+    tests: [
+      { input: "50781", expected: "5" },
+      { input: "7", expected: "1" },
+      { input: "100", expected: "3" },
+      { input: "999999999", expected: "9" }
+    ]
+  },
+  {
+    id: 9, part: 2,
+    title: "Цифры в обратном порядке",
+    level: "средняя",
+    body: `
+      <p>Дано натуральное число <span class="inline-code">n</span>. Выведите число, записанное его цифрами в обратном порядке.</p>
+      <p><b>Входные данные:</b> одно натуральное число <span class="inline-code">n</span>, <span class="inline-code">n &gt; 0</span>.</p>
+      <p><b>Выходные данные:</b> одно число — исходное число, записанное в обратном порядке.</p>
+      <p class="hint">Например, из <span class="inline-code">1234</span> должно получиться <span class="inline-code">4321</span>.</p>
+    `,
+    example: { input: "1234", output: "4321" },
+    starter: "n = int(input())\n\n# ваш код ниже\n",
+    tests: [
+      { input: "1234", expected: "4321" },
+      { input: "7", expected: "7" },
+      { input: "100", expected: "1" },
+      { input: "120345", expected: "543021" }
+    ]
+  },
+  {
+    id: 10, part: 2,
+    title: "Среднее арифметическое цифр",
+    level: "средняя",
+    body: `
+      <p>Дано натуральное число <span class="inline-code">n</span>. Найдите среднее арифметическое его цифр.</p>
+      <p><b>Входные данные:</b> одно натуральное число <span class="inline-code">n</span>, <span class="inline-code">n &gt; 0</span>.</p>
+      <p><b>Выходные данные:</b> одно число — среднее арифметическое цифр.</p>
+      <p class="hint">Подсказка: сначала найдите сумму цифр и количество цифр, затем разделите сумму на количество.</p>
+    `,
+    example: { input: "50781", output: "4.2" },
+    starter: "n = int(input())\n\n# ваш код ниже\n",
+    tests: [
+      { input: "50781", expected: "4.2" },
+      { input: "9", expected: "9.0" },
+      { input: "12345", expected: "3.0" },
+      { input: "1000", expected: "0.25" }
+    ]
+  }
+];
+
+/* ============================================================
+   Состояние
+   ============================================================ */
+const STORAGE_CODE = id => `py_trainer_code_${id}`;
+const STORAGE_SOLVED = 'py_trainer_solved';
+const STORAGE_CURRENT = 'py_trainer_current';
+
+let currentTaskId = parseInt(localStorage.getItem(STORAGE_CURRENT) || "1", 10);
+let solved = new Set(JSON.parse(localStorage.getItem(STORAGE_SOLVED) || "[]"));
+let pyodide = null;
+let pyReady = false;
+let editor = null;
+
+/* ============================================================
+   Утилиты
+   ============================================================ */
+function el(id) { return document.getElementById(id); }
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function normalizeOutput(s) {
+  if (s == null) return '';
+  return s.replace(/\r\n/g, '\n')
+    .split('\n')
+    .map(l => l.trim())
+    .join('\n')
+    .replace(/^\n+|\n+$/g, '');
+}
+
+function linesEqual(a, b) {
+  if (a === b) return true;
+  if (a.toUpperCase() === b.toUpperCase()) return true;
+  const rx = /-?\d+(?:\.\d+)?/g;
+  const na = a.match(rx) || [];
+  const nb = b.match(rx) || [];
+  if (na.length === 0 || nb.length === 0) return false;
+  if (na.length !== nb.length) return false;
+  const ta = a.replace(rx, '\u0000');
+  const tb = b.replace(rx, '\u0000');
+  if (ta !== tb) return false;
+  for (let i = 0; i < na.length; i++) {
+    const x = parseFloat(na[i]);
+    const y = parseFloat(nb[i]);
+    if (x === y) continue;
+    if (Math.abs(x - y) < 1e-4) continue;
+    return false;
+  }
+  return true;
+}
+
+function compareOutput(actual, expected) {
+  const a = normalizeOutput(actual).split('\n');
+  const e = normalizeOutput(expected).split('\n');
+  if (a.length !== e.length) {
+    return { ok: false, reason: `Ожидалось строк: ${e.length}, получено: ${a.length}` };
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (!linesEqual(a[i], e[i])) {
+      return { ok: false, reason: `Строка ${i + 1} отличается` };
+    }
+  }
+  return { ok: true };
+}
+
+/* ============================================================
+   Pyodide
+   ============================================================ */
+async function initPyodide() {
+  try {
+    setStatus('loading', 'Загрузка Python… это может занять несколько секунд.');
+    pyodide = await loadPyodide({
+      indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
+    });
+    pyReady = true;
+    setStatus('ready', 'Python готов. Можно решать задачи.');
+    updateButtons();
+  } catch (e) {
+    setStatus('error', 'Не удалось загрузить Python: ' + e.message);
+  }
+}
+
+function setStatus(kind, text) {
+  const dot = el('status-dot');
+  dot.classList.remove('ready', 'error');
+  if (kind === 'ready') dot.classList.add('ready');
+  if (kind === 'error') dot.classList.add('error');
+  el('status-text').textContent = text;
+}
+
+async function runPython(code, inputText) {
+  pyodide.globals.set('_user_code', code);
+  pyodide.globals.set('_user_input', inputText);
+  const resJson = await pyodide.runPythonAsync(`
+import sys, json
+from io import StringIO
+
+_stdin = StringIO(_user_input)
+_stdout = StringIO()
+_old_in, _old_out = sys.stdin, sys.stdout
+sys.stdin = _stdin
+sys.stdout = _stdout
+
+_err = None
+try:
+    exec(compile(_user_code, "<solution>", "exec"), {"__name__": "__main__"})
+except SystemExit:
+    pass
+except BaseException as e:
+    _err = f"{type(e).__name__}: {e}"
+finally:
+    sys.stdin = _old_in
+    sys.stdout = _old_out
+
+json.dumps({"out": _stdout.getvalue(), "err": _err})
+`);
+  return JSON.parse(resJson);
+}
+
+/* ============================================================
+   Редактор CodeMirror
+   ============================================================ */
+function getCode() { return editor ? editor.getValue() : el('code').value; }
+
+function setCode(v) {
+  if (editor) editor.setValue(v);
+  else el('code').value = v;
+  localStorage.setItem(STORAGE_CODE(currentTaskId), v);
+}
+
+function initEditor() {
+  editor = CodeMirror.fromTextArea(el('code'), {
+    mode: 'python',
+    theme: 'dracula',
+    lineNumbers: true,
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: false,
+    lineWrapping: true,
+    autoCloseBrackets: true,
+    matchBrackets: true,
+    extraKeys: {
+      'Ctrl-Space': 'autocomplete',
+      'Cmd-Space': 'autocomplete',
+      'Tab': (cm) => cm.replaceSelection('    ', 'end'),
+      'Shift-Tab': 'indentLess',
+      'Ctrl-/': 'toggleComment',
+      'Cmd-/': 'toggleComment',
+      'Ctrl-Enter': () => runAndHighlight('run'),
+      'Cmd-Enter':  () => runAndHighlight('run'),
+      'Shift-Ctrl-Enter': () => runAndHighlight('check'),
+      'Shift-Cmd-Enter':  () => runAndHighlight('check')
+    }
+  });
+
+  editor.on('inputRead', (cm, change) => {
+    if (!change.text) return;
+    const lastChar = change.text[0];
+    if (lastChar === '.' || /[a-zA-Z_]/.test(lastChar)) {
+      const token = cm.getTokenAt(cm.getCursor());
+      const word = (token.string || '').replace(/[^a-zA-Z0-9_]/g, '');
+      if (lastChar === '.' || word.length >= 2) {
+        cm.showHint({ completeSingle: false });
+      }
+    }
+  });
+
+  editor.on('change', () => {
+    localStorage.setItem(STORAGE_CODE(currentTaskId), editor.getValue());
+  });
+}
+
+function runAndHighlight(mode) {
+  if (!pyReady) return;
+  if (mode === 'check') onCheck();
+  else onRun();
+}
+
+/* ============================================================
+   UI
+   ============================================================ */
+function renderTaskList() {
+  const list1 = el('list-part1');
+  const list2 = el('list-part2');
+  list1.innerHTML = '';
+  list2.innerHTML = '';
+  TASKS.forEach(t => {
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.dataset.id = t.id;
+    if (t.id === currentTaskId) btn.classList.add('active');
+    if (solved.has(t.id)) btn.classList.add('solved');
+    btn.innerHTML = `<span class="num"><span>${t.id}</span></span><span>${escapeHtml(t.title)}</span>`;
+    btn.addEventListener('click', () => selectTask(t.id));
+    li.appendChild(btn);
+    (t.part === 1 ? list1 : list2).appendChild(li);
+  });
+}
+
+function updateProgress() {
+  const total = TASKS.length;
+  const done = solved.size;
+  el('progress-text').textContent = `${done} / ${total}`;
+  el('progress-bar').style.width = (done / total * 100) + '%';
+}
+
+function selectTask(id) {
+  const task = TASKS.find(t => t.id === id);
+  if (!task) return;
+  currentTaskId = id;
+  localStorage.setItem(STORAGE_CURRENT, String(id));
+
+  document.querySelectorAll('.task-list button').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.id, 10) === id);
+  });
+
+  el('task-title').textContent = `Задача ${task.id}. ${task.title}`;
+  const lvl = el('task-level');
+  lvl.textContent = task.level;
+  lvl.className = 'badge ' + (task.level === 'лёгкая' ? 'easy' : 'medium');
+
+  el('task-body').innerHTML = `
+    ${task.body}
+    <div class="example-grid">
+      <div class="example-box">
+        <div class="label">Пример ввода</div>
+        <pre>${escapeHtml(task.example.input)}</pre>
+      </div>
+      <div class="example-box">
+        <div class="label">Пример вывода</div>
+        <pre>${escapeHtml(task.example.output)}</pre>
+      </div>
+    </div>
+  `;
+
+  const savedCode = localStorage.getItem(STORAGE_CODE(task.id));
+  const code = savedCode !== null ? savedCode : task.starter;
+  if (editor) {
+    editor.setValue(code);
+    editor.clearHistory();
+    editor.refresh();
+  } else {
+    el('code').value = code;
+  }
+
+  el('output').textContent = 'Здесь появится результат запуска.';
+  el('output').classList.remove('err');
+  el('tests').innerHTML = '<li>Нажмите «Отправить на проверку», чтобы прогнать код по тестам.</li>';
+
+  updateButtons();
+}
+
+function updateButtons() {
+  const canRun = pyReady;
+  el('btn-run').disabled = !canRun;
+  el('btn-check').disabled = !canRun;
+}
+
+/* ============================================================
+   Действия
+   ============================================================ */
+async function onRun() {
+  const code = getCode();
+  const task = TASKS.find(t => t.id === currentTaskId);
+  const testInput = task.tests[0].input;
+
+  el('output').textContent = 'Выполняется…';
+  el('output').classList.remove('err');
+  el('tests').innerHTML = '<li>Нажмите «Отправить на проверку», чтобы прогнать код по тестам.</li>';
+
+  try {
+    const { out, err } = await runPython(code, testInput);
+    if (err) {
+      el('output').textContent = (out || '') + (out ? '\n' : '') + '❌ ' + err;
+      el('output').classList.add('err');
+    } else {
+      el('output').textContent = out || '(программа не вывела ничего)';
+    }
+  } catch (e) {
+    el('output').textContent = 'Ошибка выполнения: ' + e.message;
+    el('output').classList.add('err');
+  }
+}
+
+async function onCheck() {
+  const code = getCode();
+  const task = TASKS.find(t => t.id === currentTaskId);
+
+  el('output').textContent = 'Проверка тестов…';
+  el('output').classList.remove('err');
+  el('tests').innerHTML = '';
+
+  const results = [];
+  for (let i = 0; i < task.tests.length; i++) {
+    const test = task.tests[i];
+    let result;
+    try {
+      result = await runPython(code, test.input);
+    } catch (e) {
+      result = { out: '', err: 'Ошибка выполнения: ' + e.message };
+    }
+
+    let ok = false;
+    let reason = '';
+    if (result.err) {
+      ok = false;
+      reason = result.err;
+    } else {
+      const cmp = compareOutput(result.out, test.expected);
+      ok = cmp.ok;
+      if (!ok) reason = cmp.reason;
+    }
+
+    results.push({ ok, index: i + 1, test, out: result.out, reason });
+  }
+
+  const allPassed = results.every(r => r.ok);
+
+  // Всегда показываем только тест №1, остальные — в свёрнутом блоке
+  const shownIdx = 0;
+
+  const testsContainer = el('tests');
+  testsContainer.appendChild(buildTestLi(results[shownIdx]));
+
+  const others = results.filter((_, idx) => idx !== shownIdx);
+  if (others.length > 0) {
+    const details = document.createElement('details');
+    details.className = 'details-tests';
+
+    const summary = document.createElement('summary');
+    const failsInOthers = others.filter(r => !r.ok).length;
+    summary.textContent = failsInOthers > 0
+      ? `Показать остальные тесты (не пройдено: ${failsInOthers} из ${others.length})`
+      : `Показать остальные тесты (${others.length})`;
+    details.appendChild(summary);
+
+    const body = document.createElement('div');
+    body.className = 'body';
+    others.forEach(r => body.appendChild(buildTestLi(r)));
+    details.appendChild(body);
+
+    testsContainer.appendChild(details);
+  }
+
+  if (allPassed) {
+    el('output').textContent = '✅ Все тесты пройдены!';
+    solved.add(task.id);
+    localStorage.setItem(STORAGE_SOLVED, JSON.stringify([...solved]));
+    renderTaskList();
+    updateProgress();
+  } else {
+    el('output').textContent = '❌ Не все тесты пройдены. Смотрите детали ниже.';
+    el('output').classList.add('err');
+  }
+}
+
+function buildTestLi(r) {
+  const li = document.createElement('li');
+  li.className = r.ok ? 'ok' : 'fail';
+
+  const icon = document.createElement('span');
+  icon.className = 'icon';
+  icon.textContent = r.ok ? '✓' : '✕';
+  li.appendChild(icon);
+
+  const content = document.createElement('div');
+  content.style.flex = '1';
+  content.innerHTML = `<b>Тест ${r.index}</b>${r.ok ? ' — пройден' : ' — не пройден'}`;
+
+  if (!r.ok) {
+    const detail = document.createElement('div');
+    detail.className = 'test-detail';
+    detail.innerHTML = `
+      <div class="box"><span class="label">Ввод</span>${escapeHtml(r.test.input)}</div>
+      <div class="box"><span class="label">Ожидалось</span>${escapeHtml(r.test.expected)}</div>
+      <div class="box"><span class="label">Получено</span>${escapeHtml(r.out || '(пусто)')}</div>
+      <div class="box"><span class="label">Сообщение</span>${escapeHtml(r.reason || '')}</div>
+    `;
+    content.appendChild(detail);
+  }
+
+  li.appendChild(content);
+  return li;
+}
+
+function onReset() {
+  const task = TASKS.find(t => t.id === currentTaskId);
+  if (!confirm('Сбросить код к начальному варианту?')) return;
+  setCode(task.starter);
+}
+
+/* ============================================================
+   Инициализация
+   ============================================================ */
+function boot() {
+  renderTaskList();
+  updateProgress();
+
+  initEditor();
+  selectTask(currentTaskId);
+
+  el('btn-run').addEventListener('click', onRun);
+  el('btn-check').addEventListener('click', onCheck);
+  el('btn-reset').addEventListener('click', onReset);
+
+  initPyodide();
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>
