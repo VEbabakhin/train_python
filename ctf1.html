@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИБ 7 класс · Занятие 2. Шифр перестановки</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+        --bg: #f4f6fb; --card: #ffffff; --text: #1e293b; --muted: #64748b;
+        --line: #e2e8f0; --blue: #3b82f6; --blue-dark: #2563eb;
+        --green: #16a34a; --green-soft: #dcfce7;
+        --red: #dc2626; --red-soft: #fee2e2;
+        --amber: #d97706; --amber-soft: #fef3c7;
+        --purple: #7c3aed; --purple-soft: #ede9fe;
+        --shadow: 0 1px 3px rgba(15,23,42,.06), 0 4px 12px rgba(15,23,42,.04);
+    }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        background: var(--bg); color: var(--text); line-height: 1.6;
+        padding: 24px 16px 80px; -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 980px; margin: 0 auto; }
+
+    .progress-wrap {
+        position: sticky; top: 0; z-index: 50;
+        background: rgba(244,246,251,.92); backdrop-filter: blur(8px);
+        padding: 10px 0 14px; margin-bottom: 8px;
+    }
+    .progress-bar { height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+    .progress-fill {
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, #60a5fa, #3b82f6);
+        border-radius: 99px; transition: width .35s ease;
+    }
+    .progress-label {
+        display: flex; justify-content: space-between;
+        font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 500;
+    }
+
+    header {
+        background: var(--card); border-radius: 16px;
+        padding: 32px 36px; box-shadow: var(--shadow);
+        margin-bottom: 20px; border: 1px solid var(--line);
+    }
+    .eyebrow {
+        font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px;
+        color: var(--blue); font-weight: 600; margin-bottom: 8px;
+    }
+    h1 { font-size: 28px; font-weight: 700; color: #0f172a; letter-spacing: -0.4px; margin-bottom: 10px; line-height: 1.25; }
+    .lead { color: var(--muted); font-size: 15px; max-width: 700px; }
+
+    .tabs {
+        display: flex; gap: 6px; margin-bottom: 20px;
+        background: var(--card); padding: 6px; border-radius: 14px;
+        border: 1px solid var(--line); box-shadow: var(--shadow);
+    }
+    .tab {
+        flex: 1; padding: 12px 16px; border-radius: 10px;
+        border: none; background: transparent; font-family: inherit;
+        font-size: 14px; font-weight: 600; color: var(--muted);
+        cursor: pointer; transition: all .2s; text-align: center;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .tab:hover { color: var(--text); background: #f1f5f9; }
+    .tab.active { background: var(--blue); color: #fff; box-shadow: 0 4px 12px rgba(59,130,246,.3); }
+    .tab-badge {
+        background: rgba(255,255,255,.25); color: inherit;
+        padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700;
+    }
+    .tab:not(.active) .tab-badge { background: #e2e8f0; color: #64748b; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn .3s ease; }
+
+    section {
+        background: var(--card); border-radius: 16px;
+        padding: 28px 36px; box-shadow: var(--shadow);
+        margin-bottom: 24px; border: 1px solid var(--line);
+    }
+    h2 { font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.2px; }
+    .section-sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+    h3 { font-size: 16px; font-weight: 600; color: #334155; margin: 20px 0 8px; }
+    p { margin-bottom: 12px; color: #334155; }
+    ul, ol { margin-left: 22px; margin-bottom: 14px; color: #334155; }
+    li { margin-bottom: 6px; }
+
+    /* Блоки с буквами */
+    .blocks {
+        display: flex; gap: 6px; flex-wrap: wrap;
+        margin: 14px 0; align-items: center;
+    }
+    .blk {
+        display: flex; border: 2px solid var(--line);
+        border-radius: 10px; overflow: hidden;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        box-shadow: 0 1px 2px rgba(15,23,42,.04);
+    }
+    .blk .cell {
+        width: 40px; height: 46px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; font-weight: 700;
+        background: #f8fafc; color: #334155;
+        border-right: 1px solid var(--line);
+        position: relative;
+    }
+    .blk .cell:last-child { border-right: none; }
+    .blk .cell.pos1 { background: #dbeafe; color: #1e40af; }
+    .blk .cell.pos2 { background: #dcfce7; color: #166534; }
+    .blk .cell.pos3 { background: #fef3c7; color: #854d0e; }
+    .blk .cell.pos4 { background: #ede9fe; color: #5b21b6; }
+    .blk .cell.pos5 { background: #fee2e2; color: #991b1b; }
+    .blk .cell.pos6 { background: #cffafe; color: #155e75; }
+    .blk .cell .idx {
+        position: absolute; top: 2px; left: 4px;
+        font-size: 9px; font-weight: 700; color: #94a3b8;
+        font-family: -apple-system, sans-serif;
+    }
+    .arrow { font-size: 20px; color: var(--muted); padding: 0 8px; font-weight: 300; }
+    .blk-note {
+        font-size: 12px; color: var(--muted);
+        margin-top: 6px; font-family: ui-monospace, monospace;
+    }
+
+    /* Theory blocks */
+    .theory-block {
+        background: #f8fafc; border-left: 3px solid var(--blue);
+        border-radius: 0 10px 10px 0;
+        padding: 16px 20px; margin-bottom: 14px;
+    }
+    .theory-block.amber { border-left-color: var(--amber); background: #fffbeb; }
+    .theory-block.green { border-left-color: var(--green); background: #f0fdf4; }
+    .theory-block.purple { border-left-color: var(--purple); background: #faf5ff; }
+    .theory-block .label {
+        font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+        color: var(--blue); font-weight: 700; margin-bottom: 6px;
+    }
+    .theory-block.amber .label { color: #b45309; }
+    .theory-block.green .label { color: #15803d; }
+    .theory-block.purple .label { color: #6d28d9; }
+
+    .example {
+        background: #fffbeb; border-left: 4px solid #f59e0b;
+        border-radius: 0 10px 10px 0; padding: 14px 20px; margin-bottom: 14px;
+    }
+    .example .label {
+        font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+        color: #b45309; font-weight: 700; margin-bottom: 6px;
+    }
+    .example .body { font-size: 14px; color: #78350f; }
+
+    /* Steps */
+    .step {
+        display: flex; gap: 14px; margin-bottom: 12px;
+        align-items: flex-start;
+    }
+    .step-num {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: var(--blue); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 13px; flex-shrink: 0;
+        margin-top: 2px;
+    }
+    .step-body { flex: 1; font-size: 14px; color: #334155; }
+    .step-body strong { color: #0f172a; }
+    .step-body code {
+        font-family: ui-monospace, monospace; background: #f1f5f9;
+        padding: 1px 6px; border-radius: 4px; font-size: 13px;
+    }
+
+    /* Tasks */
+    .task {
+        background: #ffffff; border: 1px solid var(--line);
+        border-radius: 14px; padding: 22px 24px; margin-bottom: 18px;
+        transition: border-color .2s;
+    }
+    .task.correct { border-color: #86efac; background: #f0fdf4; }
+    .task.incorrect { border-color: #fca5a5; background: #fef2f2; }
+
+    .task-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .task-num {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: #eff6ff; color: var(--blue);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+    .task-title { font-weight: 600; font-size: 15px; color: #0f172a; }
+
+    .options label {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px; border: 1px solid var(--line);
+        border-radius: 10px; margin-bottom: 8px; cursor: pointer;
+        transition: all .15s; font-size: 14px; color: #334155;
+    }
+    .options label:hover { border-color: #cbd5e1; background: #f8fafc; }
+    .options label.selected { border-color: var(--blue); background: #eff6ff; }
+    .options input { transform: scale(1.1); accent-color: var(--blue); }
+
+    input[type="text"] {
+        padding: 9px 12px; border: 1px solid #cbd5e1;
+        border-radius: 8px; font-size: 14px; font-family: inherit;
+        width: 100%; max-width: 360px; transition: border-color .15s;
+        text-transform: uppercase; letter-spacing: 1px;
+    }
+    input[type="text"]:focus {
+        outline: none; border-color: var(--blue);
+        box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+    }
+    input[type="text"].normal { text-transform: none; letter-spacing: 0; }
+
+    .btn {
+        background: var(--blue); color: #fff; border: none;
+        padding: 9px 22px; border-radius: 8px; font-size: 14px;
+        font-weight: 500; cursor: pointer;
+        transition: background .15s, transform .1s;
+        font-family: inherit; margin-top: 10px;
+    }
+    .btn:hover { background: var(--blue-dark); }
+    .btn:active { transform: scale(.97); }
+
+    .feedback {
+        margin-top: 12px; padding: 10px 14px; border-radius: 8px;
+        font-size: 13.5px; font-weight: 500; display: none;
+        animation: fadeIn .3s ease;
+    }
+    .feedback.show { display: block; }
+    .feedback.ok { background: var(--green-soft); color: #14532d; border-left: 3px solid var(--green); }
+    .feedback.bad { background: var(--red-soft); color: #7f1d1d; border-left: 3px solid var(--red); }
+    .feedback.hint { background: var(--amber-soft); color: #78350f; border-left: 3px solid var(--amber); }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .final-card {
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        color: #fff; border-radius: 16px; padding: 32px 36px;
+        text-align: center; box-shadow: 0 10px 30px rgba(59,130,246,.25);
+        display: none; margin-bottom: 24px;
+    }
+    .final-card.show { display: block; animation: fadeIn .4s ease; }
+    .final-card h2 { color: #fff; font-size: 22px; margin-bottom: 10px; }
+    .final-score { font-size: 42px; font-weight: 800; letter-spacing: -1px; margin: 12px 0; }
+    .final-msg { font-size: 15px; opacity: .92; max-width: 500px; margin: 0 auto; }
+
+    .intro-note {
+        background: #eff6ff; border-left: 4px solid var(--blue);
+        border-radius: 0 10px 10px 0; padding: 14px 20px;
+        margin-bottom: 20px; font-size: 14px; color: #1e3a8a;
+    }
+    .question-progress {
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 18px; padding: 12px 16px;
+        background: #f8fafc; border-radius: 10px;
+        border: 1px solid var(--line); font-size: 13px; color: var(--muted);
+    }
+    .question-progress .bar-mini {
+        flex: 1; height: 6px; background: #e2e8f0;
+        border-radius: 99px; overflow: hidden;
+    }
+    .question-progress .bar-mini-fill {
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, #34d399, #10b981);
+        transition: width .3s ease;
+    }
+
+    .key-badge {
+        display: inline-block; font-family: ui-monospace, monospace;
+        background: #0f172a; color: #fff; padding: 3px 12px;
+        border-radius: 8px; font-size: 15px; font-weight: 700;
+        letter-spacing: 2px; margin: 0 4px;
+    }
+
+    @media (max-width: 720px) {
+        header, section { padding: 22px 20px; }
+        h1 { font-size: 22px; }
+        .tab { font-size: 12px; padding: 10px 8px; }
+        .blk .cell { width: 34px; height: 40px; font-size: 17px; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+
+    <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-label">
+            <span id="progressLabel">Разбор с учителем</span>
+            <span id="progressText">0 / 15</span>
+        </div>
+    </div>
+
+    <header>
+        <div class="eyebrow">Модуль 1 · Занятие 2</div>
+        <h1>Шифр простой перестановки</h1>
+        <p class="lead">Один из древнейших способов шифрования: буквы не меняются, но меняются местами. Разберём ключ, шифрование, расшифровку и потренируемся на 30 задачах.</p>
+    </header>
+
+    <div class="tabs" role="tablist">
+        <button class="tab active" role="tab" data-tab="lesson" onclick="switchTab('lesson')">
+            <span>Разбор с учителем</span>
+            <span class="tab-badge" id="badgeLesson">0/15</span>
+        </button>
+        <button class="tab" role="tab" data-tab="selfcheck" onclick="switchTab('selfcheck')">
+            <span>Проверь себя</span>
+            <span class="tab-badge" id="badgeSelf">0/15</span>
+        </button>
+    </div>
+
+    <!-- ============ LESSON TAB ============ -->
+    <div class="tab-panel active" id="panel-lesson">
+
+        <!-- THEORY -->
+        <section>
+            <h2>Что такое перестановка</h2>
+            <p class="section-sub">Главная идея: буквы не заменяются, а меняются местами по правилу.</p>
+
+            <div class="theory-block">
+                <div class="label">Определение</div>
+                <p><strong>Шифр простой перестановки</strong> — это шифр, при котором исходный текст делится на <b>блоки</b> одинаковой длины, и внутри каждого блока буквы меняются местами по определённому правилу — <b>ключу</b>.</p>
+            </div>
+
+            <h3>Как выглядит ключ</h3>
+            <p>Ключ — это последовательность цифр от 1 до длины блока. Например, для блока из 3 букв ключ может быть <span class="key-badge">312</span>, <span class="key-badge">213</span>, <span class="key-badge">321</span> и так далее.</p>
+
+            <div class="theory-block amber">
+                <div class="label">Как читать ключ</div>
+                <p>Ключ говорит: <b>в каком порядке брать буквы исходного блока, чтобы записать их в результат</b>.</p>
+                <p>Ключ <span class="key-badge">312</span> означает:<br>
+                — 1-я буква результата = 3-я буква исходного,<br>
+                — 2-я буква результата = 1-я буква исходного,<br>
+                — 3-я буква результата = 2-я буква исходного.</p>
+            </div>
+
+            <h3>Пример: шифруем слово «ПОЧ»</h3>
+            <div class="blocks">
+                <div class="blk">
+                    <div class="cell pos1"><span class="idx">1</span>П</div>
+                    <div class="cell pos2"><span class="idx">2</span>О</div>
+                    <div class="cell pos3"><span class="idx">3</span>Ч</div>
+                </div>
+                <span class="arrow">→</span>
+                <div class="blk">
+                    <div class="cell pos3">Ч</div>
+                    <div class="cell pos1">П</div>
+                    <div class="cell pos2">О</div>
+                </div>
+            </div>
+            <p class="blk-note">ключ 312: сначала берём 3-ю (Ч), потом 1-ю (П), потом 2-ю (О)</p>
+
+            <p>Из слова <b>ПОЧ</b> получилось <b>ЧПО</b>.</p>
+
+            <h3>Полный пример: «ПОЧТАЛЬОН»</h3>
+            <p>Возьмём блоки по 3 буквы и ключ 312. 9 букв — ровно 3 блока.</p>
+
+            <div class="blocks">
+                <div class="blk">
+                    <div class="cell pos1">П</div><div class="cell pos2">О</div><div class="cell pos3">Ч</div>
+                </div>
+                <div class="blk">
+                    <div class="cell pos1">Т</div><div class="cell pos2">А</div><div class="cell pos3">Л</div>
+                </div>
+                <div class="blk">
+                    <div class="cell pos1">Ь</div><div class="cell pos2">О</div><div class="cell pos3">Н</div>
+                </div>
+            </div>
+            <div class="blocks">
+                <div class="blk">
+                    <div class="cell pos3">Ч</div><div class="cell pos1">П</div><div class="cell pos2">О</div>
+                </div>
+                <div class="blk">
+                    <div class="cell pos3">Л</div><div class="cell pos1">Т</div><div class="cell pos2">А</div>
+                </div>
+                <div class="blk">
+                    <div class="cell pos3">Н</div><div class="cell pos1">Ь</div><div class="cell pos2">О</div>
+                </div>
+            </div>
+            <p class="blk-note">Ответ: ЧПО ЛТА НЬО → <b>ЧПОЛТАНЬО</b></p>
+        </section>
+
+        <!-- DECRYPTION -->
+        <section>
+            <h2>Как расшифровать</h2>
+            <p class="section-sub">Обратная задача — не сложнее, чем прямая. Главное — понять, куда какая буква возвращается.</p>
+
+            <div class="theory-block green">
+                <div class="label">Правило расшифровки</div>
+                <p>Чтобы расшифровать, мы делаем то же самое, но наоборот: берём буквы шифртекста по порядку и <b>ставим каждую на ту позицию, откуда она была взята при шифровании</b>.</p>
+                <p>При шифровании 1-я буква шифртекста была взята с 3-й позиции — значит, при расшифровке ставим её на 3-ю позицию. И так далее.</p>
+            </div>
+
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-body">У нас шифртекст <b>ЧПО</b> и ключ <span class="key-badge">312</span>.</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-body">1-я буква шифртекста <b>Ч</b> вернулась с позиции 3 → ставим на позицию 3.</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-body">2-я буква <b>П</b> вернулась с позиции 1 → ставим на позицию 1.</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-body">3-я буква <b>О</b> вернулась с позиции 2 → ставим на позицию 2.</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">5</div>
+                    <div class="step-body">Получаем <b>ПОЧ</b> — исходное слово.</div>
+                </div>
+            </div>
+
+            <h3>Альтернатива: обратный ключ</h3>
+            <p>Ключ <span class="key-badge">312</span> имеет обратный ключ <span class="key-badge">231</span>. Это значит: чтобы расшифровать, можно применить ту же логику, но с ключом 231 — как будто шифруем ещё раз.</p>
+            <div class="blocks">
+                <div class="blk">
+                    <div class="cell">Ч</div><div class="cell">П</div><div class="cell">О</div>
+                </div>
+                <span class="arrow">→ ключ 231 →</span>
+                <div class="blk">
+                    <div class="cell">П</div><div class="cell">О</div><div class="cell">Ч</div>
+                </div>
+            </div>
+            <p class="blk-note">1-я = 2-я (П), 2-я = 3-я (О), 3-я = 1-я (Ч)</p>
+
+            <div class="theory-block purple">
+                <div class="label">Важно</div>
+                <p>В школьных олимпиадах чаще всего достаточно <b>первого способа</b> — просто ставить буквы на свои места. Обратный ключ — для тех, кому интересно.</p>
+            </div>
+        </section>
+
+        <!-- EDGE CASES -->
+        <section>
+            <h2>Тонкости</h2>
+            <p class="section-sub">Три вещи, которые часто встречаются в задачах.</p>
+
+            <h3>1. Неполный последний блок</h3>
+            <p>Если длина текста не делится на длину блока, последний блок будет короче. Его <b>либо оставляют как есть</b>, либо дополняют символами (например, «Х» или пробелами) до полной длины.</p>
+            <div class="example">
+                <div class="label">Пример</div>
+                <div class="body">Текст «МАМА» блоками по 3: МАМ + А. Второй блок неполный — «А» просто остаётся как есть.</div>
+            </div>
+
+            <h3>2. Ключ-слово</h3>
+            <p>Иногда ключ задают не цифрами, а словом. Тогда буквы слова нумеруются в алфавитном порядке.</p>
+            <div class="example">
+                <div class="label">Пример</div>
+                <div class="body">Ключ «ЛУНА». Расположим буквы по алфавиту: <b>А</b>(позиция 4) → <b>Л</b>(1) → <b>Н</b>(3) → <b>У</b>(2). Значит, числовой ключ: <span class="key-badge">4132</span>.</div>
+            </div>
+
+            <h3>3. Почему это слабый шифр</h3>
+            <p>Число возможных ключей для блока длины n — это n! (n-факториал). Для блока 3 — всего 6 ключей, для блока 5 — 120. Современный компьютер переберёт их мгновенно. Поэтому в чистом виде такой шифр не используется, но он <b>отличная тренировка логики</b>.</p>
+        </section>
+
+        <!-- WALKTHROUGH -->
+        <section>
+            <h2>Разбор задачи по шагам</h2>
+            <p class="section-sub">Задача из школьного этапа: зашифровать «АМЫВЫИГРАЛИОЛИМПИАДУ» блоками по 5, ключ 53142.</p>
+
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <strong>Считаем длину.</strong> «АМЫВЫИГРАЛИОЛИМПИАДУ» — 20 букв. Блок 5 → ровно 4 блока.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <strong>Разбиваем на блоки:</strong>
+                    <div class="blocks">
+                        <div class="blk">
+                            <div class="cell pos1"><span class="idx">1</span>А</div>
+                            <div class="cell pos2"><span class="idx">2</span>М</div>
+                            <div class="cell pos3"><span class="idx">3</span>Ы</div>
+                            <div class="cell pos4"><span class="idx">4</span>В</div>
+                            <div class="cell pos5"><span class="idx">5</span>Ы</div>
+                        </div>
+                        <div class="blk">
+                            <div class="cell pos1"><span class="idx">1</span>И</div>
+                            <div class="cell pos2"><span class="idx">2</span>Г</div>
+                            <div class="cell pos3"><span class="idx">3</span>Р</div>
+                            <div class="cell pos4"><span class="idx">4</span>А</div>
+                            <div class="cell pos5"><span class="idx">5</span>Л</div>
+                        </div>
+                    </div>
+                    <div class="blocks">
+                        <div class="blk">
+                            <div class="cell pos1"><span class="idx">1</span>И</div>
+                            <div class="cell pos2"><span class="idx">2</span>О</div>
+                            <div class="cell pos3"><span class="idx">3</span>Л</div>
+                            <div class="cell pos4"><span class="idx">4</span>И</div>
+                            <div class="cell pos5"><span class="idx">5</span>М</div>
+                        </div>
+                        <div class="blk">
+                            <div class="cell pos1"><span class="idx">1</span>П</div>
+                            <div class="cell pos2"><span class="idx">2</span>И</div>
+                            <div class="cell pos3"><span class="idx">3</span>А</div>
+                            <div class="cell pos4"><span class="idx">4</span>Д</div>
+                            <div class="cell pos5"><span class="idx">5</span>У</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <strong>Применяем ключ 53142 к первому блоку.</strong> Берём буквы в порядке 5, 3, 1, 4, 2:
+                    <div class="blocks">
+                        <div class="blk">
+                            <div class="cell pos5">Ы</div>
+                            <div class="cell pos3">Ы</div>
+                            <div class="cell pos1">А</div>
+                            <div class="cell pos4">В</div>
+                            <div class="cell pos2">М</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <strong>Применяем ко второму блоку.</strong> Ключ 53142: 5-я (Л), 3-я (Р), 1-я (И), 4-я (А), 2-я (Г).
+                    <div class="blocks">
+                        <div class="blk">
+                            <div class="cell pos5">Л</div>
+                            <div class="cell pos3">Р</div>
+                            <div class="cell pos1">И</div>
+                            <div class="cell pos4">А</div>
+                            <div class="cell pos2">Г</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">5</div>
+                <div class="step-body">
+                    <strong>Третий блок.</strong> ИОЛИМ → М, Л, И, И, О → <b>МЛИИО</b>.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">6</div>
+                <div class="step-body">
+                    <strong>Четвёртый блок.</strong> ПИАДУ → У, А, П, Д, И → <b>УАПДИ</b>.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">7</div>
+                <div class="step-body">
+                    <strong>Собираем ответ:</strong> ЫЫАВМ ЛРИАГ МЛИИО УАПДИ → <b>ЫЫАВМЛРИАГМЛИИОУАПДИ</b>
+                </div>
+            </div>
+        </section>
+
+        <!-- TEACHER PRACTICE -->
+        <section>
+            <h2>Разбор вместе с учителем</h2>
+            <p class="section-sub">15 задач. Проговариваем шаги, потом проверяем ответ.</p>
+
+            <!-- 1 -->
+            <div class="task" data-task="1" data-group="lesson">
+                <div class="task-head"><div class="task-num">1</div><div class="task-title">Зашифровать «КОТ» ключом 213.</div></div>
+                <p style="font-size:13px;color:#64748b;margin-bottom:8px;">Введи результат заглавными буквами.</p>
+                <input type="text" id="t1" placeholder="Ответ">
+                <div data-type="text" data-correct="ОКТ" data-target="t1"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 2 -->
+            <div class="task" data-task="2" data-group="lesson">
+                <div class="task-head"><div class="task-num">2</div><div class="task-title">Зашифровать «ДОМ» ключом 321.</div></div>
+                <input type="text" id="t2" placeholder="Ответ">
+                <div data-type="text" data-correct="МОД" data-target="t2"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 3 -->
+            <div class="task" data-task="3" data-group="lesson">
+                <div class="task-head"><div class="task-num">3</div><div class="task-title">Зашифровать «ПАРТА» ключом 53142.</div></div>
+                <input type="text" id="t3" placeholder="Ответ">
+                <div data-type="text" data-correct="АРПТА" data-target="t3"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 4 -->
+            <div class="task" data-task="4" data-group="lesson">
+                <div class="task-head"><div class="task-num">4</div><div class="task-title">Зашифровать «ШКОЛА» ключом 45123.</div></div>
+                <input type="text" id="t4" placeholder="Ответ">
+                <div data-type="text" data-correct="ЛАШКО" data-target="t4"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 5 -->
+            <div class="task" data-task="5" data-group="lesson">
+                <div class="task-head"><div class="task-num">5</div><div class="task-title">Зашифровать «ИГРА» ключом 3142.</div></div>
+                <input type="text" id="t5" placeholder="Ответ">
+                <div data-type="text" data-correct="РИАГ" data-target="t5"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 6 -->
+            <div class="task" data-task="6" data-group="lesson">
+                <div class="task-head"><div class="task-num">6</div><div class="task-title">Зашифровать «ПРИВЕТ» блоками по 3, ключ 213.</div></div>
+                <p style="font-size:13px;color:#64748b;margin-bottom:8px;">ПРИ + ВЕТ. Введи 6 букв подряд.</p>
+                <input type="text" id="t6" placeholder="Ответ">
+                <div data-type="text" data-correct="РПИЕВТ" data-target="t6"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 7 -->
+            <div class="task" data-task="7" data-group="lesson">
+                <div class="task-head"><div class="task-num">7</div><div class="task-title">Зашифровать «КОРОВА» ключом 213456.</div></div>
+                <input type="text" id="t7" placeholder="Ответ">
+                <div data-type="text" data-correct="ОКРОВА" data-target="t7"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 8 -->
+            <div class="task" data-task="8" data-group="lesson">
+                <div class="task-head"><div class="task-num">8</div><div class="task-title">Расшифровать «ОКТ» ключом 213.</div></div>
+                <input type="text" id="t8" placeholder="Ответ">
+                <div data-type="text" data-correct="КОТ" data-target="t8"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 9 -->
+            <div class="task" data-task="9" data-group="lesson">
+                <div class="task-head"><div class="task-num">9</div><div class="task-title">Расшифровать «ЕЦКОН» ключом 45123.</div></div>
+                <p style="font-size:13px;color:#64748b;margin-bottom:8px;">Вспомни: 1-я буква шифртекста возвращается на позицию 4, 2-я — на 5, 3-я — на 1, 4-я — на 2, 5-я — на 3.</p>
+                <input type="text" id="t9" placeholder="Ответ">
+                <div data-type="text" data-correct="КОНЕЦ" data-target="t9"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 10 -->
+            <div class="task" data-task="10" data-group="lesson">
+                <div class="task-head"><div class="task-num">10</div><div class="task-title">Расшифровать «ОКРОВА» ключом 213456.</div></div>
+                <input type="text" id="t10" placeholder="Ответ">
+                <div data-type="text" data-correct="КОРОВА" data-target="t10"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 11 -->
+            <div class="task" data-task="11" data-group="lesson">
+                <div class="task-head"><div class="task-num">11</div><div class="task-title">Каким ключом «АБВ» превращается в «ВБА»?</div></div>
+                <p style="font-size:13px;color:#64748b;margin-bottom:8px;">Ответ — три цифры, например «123».</p>
+                <input type="text" id="t11" placeholder="Ключ">
+                <div data-type="text" data-correct="321" data-target="t11"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 12 -->
+            <div class="task" data-task="12" data-group="lesson">
+                <div class="task-head"><div class="task-num">12</div><div class="task-title">Каким ключом «АБВ» превращается в «БАВ»?</div></div>
+                <input type="text" id="t12" placeholder="Ключ">
+                <div data-type="text" data-correct="213" data-target="t12"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 13 -->
+            <div class="task" data-task="13" data-group="lesson">
+                <div class="task-head"><div class="task-num">13</div><div class="task-title">Зашифровать «СТРАНА» блоками по 3, ключ 231.</div></div>
+                <input type="text" id="t13" placeholder="Ответ">
+                <div data-type="text" data-correct="ТРСНАА" data-target="t13"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 14 -->
+            <div class="task" data-task="14" data-group="lesson">
+                <div class="task-head"><div class="task-num">14</div><div class="task-title">Ключ-слово «ЛУНА». Какой числовой ключ ему соответствует?</div></div>
+                <p style="font-size:13px;color:#64748b;margin-bottom:8px;">Расположи буквы по алфавиту и определи их номера в исходном слове.</p>
+                <input type="text" id="t14" placeholder="Ключ">
+                <div data-type="text" data-correct="4132" data-target="t14"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 15 -->
+            <div class="task" data-task="15" data-group="lesson">
+                <div class="task-head"><div class="task-num">15</div><div class="task-title">Зашифровать «МОРЕ» ключом «ЛУНА» (=4132).</div></div>
+                <input type="text" id="t15" placeholder="Ответ">
+                <div data-type="text" data-correct="ЕМРО" data-target="t15"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="final-card" id="finalCardLesson">
+                <h2>Разбор завершён</h2>
+                <div class="final-score" id="finalScoreLesson">0 / 15</div>
+                <div class="final-msg">Отлично! Теперь переходи на вкладку «Проверь себя» — там 15 заданий для самостоятельной работы.</div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============ SELF TAB ============ -->
+    <div class="tab-panel" id="panel-selfcheck">
+        <section>
+            <h2>Проверь себя</h2>
+            <p class="section-sub">15 заданий. Работай самостоятельно. В конце — итоговая оценка.</p>
+
+            <div class="intro-note">
+                Прочитай задание, впиши ответ и нажми «Проверить». Если ошибся — попробуй ещё раз, пока не получится верно. Ответы вводи заглавными буквами.
+            </div>
+
+            <div class="question-progress">
+                <span>Решено:</span>
+                <div class="bar-mini"><div class="bar-mini-fill" id="selfBar"></div></div>
+                <span id="selfCount">0 / 15</span>
+            </div>
+
+            <!-- 1 -->
+            <div class="task" data-task="101" data-group="self">
+                <div class="task-head"><div class="task-num">1</div><div class="task-title">Зашифровать «МИР» ключом 213.</div></div>
+                <input type="text" id="s1" placeholder="Ответ">
+                <div data-type="text" data-correct="ИМР" data-target="s1"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 2 -->
+            <div class="task" data-task="102" data-group="self">
+                <div class="task-head"><div class="task-num">2</div><div class="task-title">Зашифровать «ЛУНА» ключом 3214.</div></div>
+                <input type="text" id="s2" placeholder="Ответ">
+                <div data-type="text" data-correct="НУЛА" data-target="s2"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 3 -->
+            <div class="task" data-task="103" data-group="self">
+                <div class="task-head"><div class="task-num">3</div><div class="task-title">Зашифровать «ЗВЕЗДА» блоками по 3, ключ 312.</div></div>
+                <input type="text" id="s3" placeholder="Ответ">
+                <div data-type="text" data-correct="ЕЗВАЗД" data-target="s3"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 4 -->
+            <div class="task" data-task="104" data-group="self">
+                <div class="task-head"><div class="task-num">4</div><div class="task-title">Расшифровать «МОД» ключом 321.</div></div>
+                <input type="text" id="s4" placeholder="Ответ">
+                <div data-type="text" data-correct="ДОМ" data-target="s4"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 5 -->
+            <div class="task" data-task="105" data-group="self">
+                <div class="task-head"><div class="task-num">5</div><div class="task-title">Расшифровать «ОСКОЛ» ключом 21345.</div></div>
+                <input type="text" id="s5" placeholder="Ответ">
+                <div data-type="text" data-correct="СОКОЛ" data-target="s5"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 6 -->
+            <div class="task" data-task="106" data-group="self">
+                <div class="task-head"><div class="task-num">6</div><div class="task-title">Зашифровать «ПАРУС» ключом 41325.</div></div>
+                <input type="text" id="s6" placeholder="Ответ">
+                <div data-type="text" data-correct="УПРАС" data-target="s6"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 7 -->
+            <div class="task" data-task="107" data-group="self">
+                <div class="task-head"><div class="task-num">7</div><div class="task-title">Расшифровать «УПРАС» ключом 41325.</div></div>
+                <input type="text" id="s7" placeholder="Ответ">
+                <div data-type="text" data-correct="ПАРУС" data-target="s7"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 8 -->
+            <div class="task" data-task="108" data-group="self">
+                <div class="task-head"><div class="task-num">8</div><div class="task-title">Зашифровать «ЗАДАЧА» блоками по 3, ключ 213.</div></div>
+                <input type="text" id="s8" placeholder="Ответ">
+                <div data-type="text" data-correct="АЗДЧАА" data-target="s8"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 9 -->
+            <div class="task" data-task="109" data-group="self">
+                <div class="task-head"><div class="task-num">9</div><div class="task-title">Расшифровать «АЗДЧАА» блоками по 3, ключ 213.</div></div>
+                <input type="text" id="s9" placeholder="Ответ">
+                <div data-type="text" data-correct="ЗАДАЧА" data-target="s9"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 10 -->
+            <div class="task" data-task="110" data-group="self">
+                <div class="task-head"><div class="task-num">10</div><div class="task-title">Каким ключом «МАМА» превращается в «АМАМ»?</div></div>
+                <input type="text" id="s10" placeholder="Ключ">
+                <div data-type="text" data-correct="2143" data-target="s10"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 11 -->
+            <div class="task" data-task="111" data-group="self">
+                <div class="task-head"><div class="task-num">11</div><div class="task-title">Ключ-слово «ЗИМА». Какой числовой ключ?</div></div>
+                <input type="text" id="s11" placeholder="Ключ">
+                <div data-type="text" data-correct="3142" data-target="s11"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 12 -->
+            <div class="task" data-task="112" data-group="self">
+                <div class="task-head"><div class="task-num">12</div><div class="task-title">Зашифровать «ЗИМА» ключом «ЗИМА» (=3142).</div></div>
+                <input type="text" id="s12" placeholder="Ответ">
+                <div data-type="text" data-correct="МЗАИ" data-target="s12"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 13 -->
+            <div class="task" data-task="113" data-group="self">
+                <div class="task-head"><div class="task-num">13</div><div class="task-title">Зашифровать «КЛЮЧ» ключом 2143.</div></div>
+                <input type="text" id="s13" placeholder="Ответ">
+                <div data-type="text" data-correct="ЛКЧЮ" data-target="s13"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 14 -->
+            <div class="task" data-task="114" data-group="self">
+                <div class="task-head"><div class="task-num">14</div><div class="task-title">Найди ошибку.</div></div>
+                <p style="font-size:14px;color:#334155;margin-bottom:10px;">Слово «СЛОН» шифруют ключом 213. Ученик получил «ЛОСН». Правильно ли он зашифровал? Если нет — впиши правильный ответ.</p>
+                <input type="text" id="s14" placeholder="Правильный шифртекст">
+                <div data-type="text" data-correct="ЛСОН" data-target="s14"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 15 -->
+            <div class="task" data-task="115" data-group="self">
+                <div class="task-head"><div class="task-num">15</div><div class="task-title">Расшифровать «КОРОВА» блоками по 3, ключ 213.</div></div>
+                <p style="font-size:13px;color:#64748b;margin-bottom:8px;">Не путай с задачей 10 — там был другой ключ и другой блок.</p>
+                <input type="text" id="s15" placeholder="Ответ">
+                <div data-type="text" data-correct="ОКРОВА" data-target="s15"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="final-card" id="finalCardSelf">
+                <h2>Самостоятельная работа завершена</h2>
+                <div class="final-score" id="finalScoreSelf">0 / 15</div>
+                <div class="final-msg" id="finalMsgSelf"></div>
+            </div>
+        </section>
+    </div>
+
+</div>
+
+<script>
+    const LESSON_TOTAL = 15;
+    const SELF_TOTAL = 15;
+    const solvedLesson = new Set();
+    const solvedSelf = new Set();
+    let activeTab = 'lesson';
+
+    function switchTab(tab) {
+        activeTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+        updateProgress();
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function updateProgress() {
+        if (activeTab === 'lesson') {
+            const n = solvedLesson.size;
+            document.getElementById('progressFill').style.width = (n / LESSON_TOTAL * 100) + '%';
+            document.getElementById('progressText').textContent = n + ' / ' + LESSON_TOTAL;
+            document.getElementById('progressLabel').textContent = 'Разбор с учителем';
+            document.getElementById('badgeLesson').textContent = n + '/' + LESSON_TOTAL;
+            if (n === LESSON_TOTAL) {
+                document.getElementById('finalCardLesson').classList.add('show');
+                document.getElementById('finalScoreLesson').textContent = n + ' / ' + LESSON_TOTAL;
+            }
+        } else {
+            const n = solvedSelf.size;
+            document.getElementById('progressFill').style.width = (n / SELF_TOTAL * 100) + '%';
+            document.getElementById('progressText').textContent = n + ' / ' + SELF_TOTAL;
+            document.getElementById('progressLabel').textContent = 'Проверь себя';
+            document.getElementById('badgeSelf').textContent = n + '/' + SELF_TOTAL;
+            document.getElementById('selfBar').style.width = (n / SELF_TOTAL * 100) + '%';
+            document.getElementById('selfCount').textContent = n + ' / ' + SELF_TOTAL;
+            if (n === SELF_TOTAL) {
+                const card = document.getElementById('finalCardSelf');
+                card.classList.add('show');
+                document.getElementById('finalScoreSelf').textContent = n + ' / ' + SELF_TOTAL;
+                let msg = '';
+                if (n >= 14) msg = 'Отличный результат! Ты уверенно владеешь шифром перестановки.';
+                else if (n >= 12) msg = 'Хороший результат. Обрати внимание на задачи, где ошибался(ась).';
+                else msg = 'Есть над чем поработать. Перечитай теорию и попробуй ещё раз.';
+                document.getElementById('finalMsgSelf').textContent = msg;
+                card.scrollIntoView({behavior: 'smooth', block: 'center'});
+            }
+        }
+    }
+
+    function taskOf(btn) { return btn.closest('.task'); }
+    function fb(task) { return task.querySelector('.feedback'); }
+    function groupOf(task) { return task.dataset.group; }
+    function idOf(task) { return parseInt(task.dataset.task, 10); }
+
+    function markSolved(task, ok, message) {
+        const f = fb(task);
+        f.textContent = message;
+        f.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+        task.classList.remove('correct', 'incorrect');
+        task.classList.add(ok ? 'correct' : 'incorrect');
+        if (ok) {
+            const id = idOf(task);
+            if (groupOf(task) === 'lesson') solvedLesson.add(id);
+            else solvedSelf.add(id);
+            updateProgress();
+        }
+    }
+
+    function normalize(s) {
+        return (s || '').trim().toUpperCase().replace(/Ё/g, 'Е').replace(/\s+/g, '');
+    }
+
+    function checkText(btn) {
+        const task = taskOf(btn);
+        const data = task.querySelector('[data-type="text"]');
+        const input = document.getElementById(data.dataset.target);
+        const val = normalize(input.value);
+        const correct = normalize(data.dataset.correct);
+        let alts = [];
+        try { alts = JSON.parse(data.dataset.alt || '[]').map(normalize); } catch(e) {}
+        if (!val) {
+            const f = fb(task);
+            f.textContent = 'Впиши ответ.';
+            f.className = 'feedback show hint';
+            return;
+        }
+        if (val === correct || alts.includes(val)) markSolved(task, true, 'Верно!');
+        else markSolved(task, false, 'Неверно. Вспомни: ключ говорит, в каком порядке брать буквы. Попробуй ещё раз.');
+    }
+
+    updateProgress();
+</script>
+</body>
+</html>
