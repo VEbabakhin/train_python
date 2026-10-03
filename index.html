@@ -389,27 +389,80 @@
      { id, title, desc, url, section, level, isNew }
    ============================================================ */
 const STORAGE_KEY = 'catalog_items';
+const VERSION_KEY = 'catalog_seed_version';
+
+/* Текущая версия «встроенного» набора.
+   Меняйте, когда добавляете новые стандартные записи,
+   чтобы у тех, кто уже открывал каталог, недостающие
+   записи автоматически подмешались. */
+const SEED_VERSION = 2;
+
+/* Стандартный набор записей — подставляется при первом
+   открытии и при обновлении версии. */
+const DEFAULT_ITEMS = [
+  {
+    title: 'Python: арифметика и цифры числа',
+    desc: 'Арифметические операции и обработка цифр числа',
+    url: 'trainer1.html',
+    section: 'Python',
+    level: 'easy',
+    isNew: false
+  },
+  {
+    title: 'Python: if / else и логические операторы',
+    desc: 'Ветвление if / else и логические связки and / or — 30 задач',
+    url: 'trainer_if.html',
+    section: 'Python',
+    level: 'easy',
+    isNew: true
+  }
+];
 
 let items = load();
 let editingId = null;
 
+function uid() {
+  return 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
 function load() {
+  let stored = [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) stored = parsed;
+    }
   } catch (e) {
-    return [];
+    stored = [];
   }
+
+  // Подмешиваем недостающие стандартные записи при обновлении версии
+  let version = 0;
+  try {
+    version = parseInt(localStorage.getItem(VERSION_KEY) || '0', 10) || 0;
+  } catch (e) {
+    version = 0;
+  }
+
+  if (version < SEED_VERSION) {
+    const existingUrls = new Set(stored.map(i => i.url));
+    DEFAULT_ITEMS.forEach(d => {
+      if (!existingUrls.has(d.url)) {
+        stored.push({ ...d, id: uid() });
+      }
+    });
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+      localStorage.setItem(VERSION_KEY, String(SEED_VERSION));
+    } catch (e) { /* ignore */ }
+  }
+
+  return stored;
 }
 
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
-
-function uid() {
-  return 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
 /* ============================================================
@@ -501,7 +554,6 @@ function deleteItem(id) {
 }
 
 async function copyUrl(url) {
-  // Если url относительный — превращаем в полный
   let full = url;
   if (!/^https?:\/\//i.test(url)) {
     full = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + url;
@@ -510,7 +562,6 @@ async function copyUrl(url) {
     await navigator.clipboard.writeText(full);
     showToast('Ссылка скопирована');
   } catch (e) {
-    // Fallback
     const ta = document.createElement('textarea');
     ta.value = full;
     document.body.appendChild(ta);
@@ -620,7 +671,6 @@ function render(query) {
 
   content.innerHTML = '';
 
-  // Обновляем счётчики
   document.getElementById('total').textContent = items.length;
 
   if (filtered.length === 0) {
@@ -636,7 +686,6 @@ function render(query) {
     return;
   }
 
-  // Группировка по разделам (при поиске — плоский список)
   if (q) {
     const list = document.createElement('div');
     list.className = 'list';
@@ -670,7 +719,6 @@ function render(query) {
     document.getElementById('sections-count').textContent = Object.keys(groups).length;
   }
 
-  // Обновляем datalist разделов
   const allSections = [...new Set(items.map(i => i.section).filter(Boolean))].sort();
   sectionsList.innerHTML = '';
   allSections.forEach(s => {
@@ -762,7 +810,6 @@ document.getElementById('import-file').addEventListener('change', (e) => {
 
 searchInput.addEventListener('input', () => render(searchInput.value));
 
-// Enter в форме → сохранить, Esc → закрыть
 addForm.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
