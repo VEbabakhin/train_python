@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Python-тренажёр: if / else и логические операторы</title>
+
+<!-- Pyodide -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+
+<!-- CodeMirror 5 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --bg: #eef2f7;
+    --panel: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --accent: #2563eb;
+    --accent-2: #1d4ed8;
+    --success: #16a34a;
+    --success-bg: #dcfce7;
+    --error: #dc2626;
+    --error-bg: #fee2e2;
+    --border: #e2e8f0;
+    --code-bg: #282a36;
+    --code-text: #f8f8f2;
+    --sidebar-bg: #0f172a;
+    --sidebar-text: #cbd5e1;
+  }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+
+  .app { display: grid; grid-template-columns: 320px 1fr; min-height: 100vh; }
+  @media (max-width: 860px) { .app { grid-template-columns: 1fr; } }
+
+  .sidebar {
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    padding: 20px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  @media (max-width: 860px) { .sidebar { position: static; height: auto; } }
+  .sidebar h1 { color: #fff; font-size: 17px; margin: 0 0 6px 0; line-height: 1.3; }
+  .sidebar .subtitle { font-size: 12.5px; color: #94a3b8; margin-bottom: 16px; }
+
+  .progress {
+    background: rgba(255,255,255,.08);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .progress b { color: #fff; }
+  .progress .bar {
+    height: 6px;
+    background: rgba(255,255,255,.12);
+    border-radius: 4px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .progress .bar > i {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #22c55e, #4ade80);
+    transition: width .3s ease;
+  }
+
+  .task-list { list-style: none; padding: 0; margin: 0; }
+  .task-list li { margin-bottom: 4px; }
+  .task-list button {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--sidebar-text);
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+    transition: background .15s;
+  }
+  .task-list button:hover { background: rgba(255,255,255,.06); }
+  .task-list button.active { background: var(--accent); color: #fff; }
+  .task-list .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: rgba(255,255,255,.1);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .task-list button.active .num { background: rgba(255,255,255,.25); }
+  .task-list button.solved .num { background: #16a34a; color: #fff; }
+  .task-list button.solved .num::after { content: "✓"; }
+  .task-list button.solved .num > span { display: none; }
+  .part-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #64748b;
+    margin: 14px 6px 6px;
+    font-weight: 600;
+  }
+
+  .main { padding: 24px 32px 60px; max-width: 1000px; }
+  @media (max-width: 860px) { .main { padding: 18px 16px 60px; } }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #f59e0b; flex-shrink: 0; }
+  .status-dot.ready { background: var(--success); }
+  .status-dot.error { background: var(--error); }
+
+  .task-header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .task-header h2 { font-size: 22px; margin: 0; line-height: 1.25; }
+  .badge {
+    font-size: 11.5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #e0f2fe;
+    color: #075985;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge.easy { background: #dcfce7; color: #166534; }
+  .badge.medium { background: #fef3c7; color: #854d0e; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 600;
+  }
+  .card p { margin: 0 0 10px 0; }
+  .card ol, .card ul { margin: 6px 0 12px 0; padding-left: 22px; }
+  .card li { margin: 3px 0; }
+
+  .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 13.5px;
+  }
+  .inline-code {
+    background: #f1f5f9;
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+  }
+
+  .example-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  @media (max-width: 640px) { .example-grid { grid-template-columns: 1fr; } }
+  .example-box {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .example-box .label {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .example-box pre {
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: #0f172a;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .editor-wrap {
+    background: var(--code-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #1e293b;
+  }
+  .editor-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #1e293b;
+    color: #94a3b8;
+    font-size: 12.5px;
+  }
+  .editor-bar .dots { display: flex; gap: 6px; }
+  .editor-bar .dots i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .editor-bar .dots i:nth-child(1) { background: #ef4444; }
+  .editor-bar .dots i:nth-child(2) { background: #f59e0b; }
+  .editor-bar .dots i:nth-child(3) { background: #22c55e; }
+
+  #code { display: none; }
+  .CodeMirror {
+    height: auto;
+    min-height: 220px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .CodeMirror-scroll { min-height: 220px; }
+
+  .CodeMirror-hints {
+    z-index: 100;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    border-radius: 8px;
+    border: 1px solid #1e293b;
+    background: #1e293b;
+    color: #e2e8f0;
+  }
+  .CodeMirror-hint { padding: 4px 10px; }
+  .CodeMirror-hint-active { background: var(--accent); color: #fff; }
+
+  .actions { display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
+  button.btn {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 18px;
+    border-radius: 9px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background .15s, transform .05s;
+  }
+  button.btn:active { transform: translateY(1px); }
+  button.btn.primary { background: var(--accent); color: #fff; }
+  button.btn.primary:hover { background: var(--accent-2); }
+  button.btn.secondary { background: #fff; color: var(--text); border-color: var(--border); }
+  button.btn.secondary:hover { background: #f8fafc; }
+  button.btn:disabled { opacity: .55; cursor: not-allowed; }
+
+  .output-block {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 46px;
+    margin-bottom: 14px;
+  }
+  .output-block.err { color: #fecaca; }
+
+  .test-list { list-style: none; padding: 0; margin: 0; }
+  .test-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+    border: 1px solid var(--border);
+    background: #fff;
+  }
+  .test-list li.ok { background: var(--success-bg); border-color: #86efac; }
+  .test-list li.fail { background: var(--error-bg); border-color: #fca5a5; }
+  .test-list li .icon { font-weight: 700; flex-shrink: 0; }
+  .test-list li.ok .icon { color: var(--success); }
+  .test-list li.fail .icon { color: var(--error); }
+
+  .test-detail { margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 640px) { .test-detail { grid-template-columns: 1fr; } }
+  .test-detail .box {
+    background: rgba(0,0,0,.04);
+    border-radius: 6px;
+    padding: 6px 9px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .test-detail .box .label {
+    font-family: inherit;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .details-tests {
+    margin-top: 12px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    background: #fafbfc;
+    overflow: hidden;
+  }
+  .details-tests > summary {
+    cursor: pointer;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    color: var(--muted);
+    font-weight: 600;
+    list-style: none;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .details-tests > summary::-webkit-details-marker { display: none; }
+  .details-tests > summary::before {
+    content: "▸";
+    display: inline-block;
+    transition: transform .15s ease;
+  }
+  .details-tests[open] > summary::before { transform: rotate(90deg); }
+  .details-tests > .body { padding: 0 12px 12px; }
+
+  .hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .footer-note { font-size: 12.5px; color: var(--muted); margin-top: 30px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h1>Python-тренажёр</h1>
+    <div class="subtitle">Условия: <span style="color:#fff">if / else</span> и логические связки <span style="color:#fff">and / or</span></div>
+
+    <div class="progress">
+      <div>Решено: <b id="progress-text">0 / 30</b></div>
+      <div class="bar"><i id="progress-bar"></i></div>
+    </div>
+
+    <div class="part-label">Часть 1. Ветвление if / else</div>
+    <ul class="task-list" id="list-part1"></ul>
+
+    <div class="part-label">Часть 2. Логические and / or</div>
+    <ul class="task-list" id="list-part2"></ul>
+  </aside>
+
+  <main class="main">
+    <div class="status-bar">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Загрузка Python… это может занять несколько секунд при первом открытии.</span>
+    </div>
+
+    <div class="task-header">
+      <h2 id="task-title">Задача 1</h2>
+      <span class="badge" id="task-level">лёгкая</span>
+    </div>
+
+    <section class="card" id="task-body"></section>
+
+    <section class="card">
+      <h3>Решение</h3>
+      <div class="editor-wrap">
+        <div class="editor-bar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div>solution.py</div>
+        </div>
+        <textarea id="code" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="btn-run" disabled>Запустить код</button>
+        <button class="btn secondary" id="btn-check" disabled>Отправить на проверку</button>
+        <button class="btn secondary" id="btn-reset">Сбросить код</button>
+      </div>
+
+      <div class="output-block" id="output">Здесь появится результат запуска.</div>
+
+      <h3 style="margin-top:14px">Результаты тестов</h3>
+      <ul class="test-list" id="tests">
+        <li>Нажмите «Отправить на проверку», чтобы прогнать код по тестам.</li>
+      </ul>
+    </section>
+
+    <div class="footer-note">
+      Тренажёр работает полностью в браузере: Python — через Pyodide, редактор — CodeMirror.
+    </div>
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   Данные задач
+   Поле решения пустое — ученик сам пишет и ввод, и логику.
+   ============================================================ */
+const TASKS = [
+  /* ==========================================================
+     Часть 1. Ветвление if / else — 15 задач
+     ========================================================== */
+  {
+    id: 1, part: 1,
+    title: "Чётное или нечётное",
+    level: "лёгкая",
+    body: `
+      <p>Дано целое число. Определите, чётное оно или нечётное.</p>
+      <p>Число чётное, если делится на 2 без остатка. Остаток от деления в Python — оператор <span class="inline-code">%</span>.</p>
+      <p><b>Входные данные:</b> одно целое число.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Чётное</span> или <span class="inline-code">Нечётное</span>.</p>
+    `,
+    example: { input: "4", output: "Чётное" },
+    starter: "",
+    tests: [
+      { input: "4", expected: "Чётное" },
+      { input: "7", expected: "Нечётное" },
+      { input: "0", expected: "Чётное" },
+      { input: "-3", expected: "Нечётное" },
+      { input: "100", expected: "Чётное" }
+    ]
+  },
+  {
+    id: 2, part: 1,
+    title: "Положительное или нет",
+    level: "лёгкая",
+    body: `
+      <p>Дано целое число. Проверьте, положительное ли оно.</p>
+      <p><b>Входные данные:</b> одно целое число.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Положительное</span>, если число больше 0, иначе <span class="inline-code">Не положительное</span>.</p>
+    `,
+    example: { input: "5", output: "Положительное" },
+    starter: "",
+    tests: [
+      { input: "5", expected: "Положительное" },
+      { input: "-3", expected: "Не положительное" },
+      { input: "0", expected: "Не положительное" },
+      { input: "42", expected: "Положительное" },
+      { input: "-100", expected: "Не положительное" }
+    ]
+  },
+  {
+    id: 3, part: 1,
+    title: "Максимум из двух чисел",
+    level: "лёгкая",
+    body: `
+      <p>Даны два целых числа. Выведите большее из них.</p>
+      <p>Если числа равны — можно вывести любое, они всё равно одинаковые.</p>
+      <p><b>Входные данные:</b> два целых числа, каждое на отдельной строке.</p>
+      <p><b>Выходные данные:</b> одно число — максимум из двух.</p>
+    `,
+    example: { input: "3\n7", output: "7" },
+    starter: "",
+    tests: [
+      { input: "3\n7", expected: "7" },
+      { input: "10\n2", expected: "10" },
+      { input: "5\n5", expected: "5" },
+      { input: "-1\n-8", expected: "-1" },
+      { input: "0\n4", expected: "4" }
+    ]
+  },
+  {
+    id: 4, part: 1,
+    title: "Совершеннолетний",
+    level: "лёгкая",
+    body: `
+      <p>Дано число — возраст человека. Определите, достиг ли он 18 лет.</p>
+      <p><b>Входные данные:</b> одно целое число — возраст.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Совершеннолетний</span>, если возраст не меньше 18, иначе <span class="inline-code">Несовершеннолетний</span>.</p>
+    `,
+    example: { input: "20", output: "Совершеннолетний" },
+    starter: "",
+    tests: [
+      { input: "20", expected: "Совершеннолетний" },
+      { input: "17", expected: "Несовершеннолетний" },
+      { input: "18", expected: "Совершеннолетний" },
+      { input: "0", expected: "Несовершеннолетний" },
+      { input: "100", expected: "Совершеннолетний" }
+    ]
+  },
+  {
+    id: 5, part: 1,
+    title: "Проверка пароля",
+    level: "лёгкая",
+    body: `
+      <p>Программа запрашивает пароль. Правильный пароль — <span class="inline-code">python123</span>.</p>
+      <p><b>Входные данные:</b> одна строка — пароль.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Доступ разрешён</span>, если пароль верный, иначе <span class="inline-code">Доступ запрещён</span>.</p>
+      <p class="hint">Сравнение строк — через <span class="inline-code">==</span>. Регистр букв важен: <span class="inline-code">Python123</span> уже не подходит.</p>
+    `,
+    example: { input: "python123", output: "Доступ разрешён" },
+    starter: "",
+    tests: [
+      { input: "python123", expected: "Доступ разрешён" },
+      { input: "qwerty", expected: "Доступ запрещён" },
+      { input: "Python123", expected: "Доступ запрещён" },
+      { input: "python1234", expected: "Доступ запрещён" }
+    ]
+  },
+  {
+    id: 6, part: 1,
+    title: "Кратность трём",
+    level: "лёгкая",
+    body: `
+      <p>Дано целое число. Проверьте, делится ли оно на 3 без остатка.</p>
+      <p><b>Входные данные:</b> одно целое число.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Кратно 3</span> или <span class="inline-code">Не кратно 3</span>.</p>
+      <p class="hint">Ноль делится на 3 без остатка — тоже «Кратно 3».</p>
+    `,
+    example: { input: "9", output: "Кратно 3" },
+    starter: "",
+    tests: [
+      { input: "9", expected: "Кратно 3" },
+      { input: "7", expected: "Не кратно 3" },
+      { input: "0", expected: "Кратно 3" },
+      { input: "-12", expected: "Кратно 3" },
+      { input: "100", expected: "Не кратно 3" }
+    ]
+  },
+  {
+    id: 7, part: 1,
+    title: "Два числа равны?",
+    level: "лёгкая",
+    body: `
+      <p>Даны два целых числа. Проверьте, равны ли они.</p>
+      <p><b>Входные данные:</b> два целых числа, каждое на отдельной строке.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Равны</span> или <span class="inline-code">Не равны</span>.</p>
+    `,
+    example: { input: "5\n5", output: "Равны" },
+    starter: "",
+    tests: [
+      { input: "5\n5", expected: "Равны" },
+      { input: "3\n7", expected: "Не равны" },
+      { input: "-1\n-1", expected: "Равны" },
+      { input: "0\n0", expected: "Равны" },
+      { input: "10\n-10", expected: "Не равны" }
+    ]
+  },
+  {
+    id: 8, part: 1,
+    title: "Сумма двух чисел чётная?",
+    level: "лёгкая",
+    body: `
+      <p>Даны два целых числа. Проверьте, является ли их сумма чётным числом.</p>
+      <p><b>Входные данные:</b> два целых числа, каждое на отдельной строке.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Сумма чётная</span> или <span class="inline-code">Сумма нечётная</span>.</p>
+    `,
+    example: { input: "3\n5", output: "Сумма чётная" },
+    starter: "",
+    tests: [
+      { input: "3\n5", expected: "Сумма чётная" },
+      { input: "4\n6", expected: "Сумма чётная" },
+      { input: "2\n3", expected: "Сумма нечётная" },
+      { input: "-1\n-1", expected: "Сумма чётная" },
+      { input: "0\n0", expected: "Сумма чётная" }
+    ]
+  },
+  {
+    id: 9, part: 1,
+    title: "Максимум из трёх чисел",
+    level: "средняя",
+    body: `
+      <p>Даны три целых числа. Выведите наибольшее из них.</p>
+      <p><b>Входные данные:</b> три целых числа, каждое на отдельной строке.</p>
+      <p><b>Выходные данные:</b> одно число — максимум из трёх.</p>
+      <p class="hint">Решите задачу через вложенные <span class="inline-code">if</span>, без дополнительной переменной и без <span class="inline-code">and</span>.</p>
+    `,
+    example: { input: "3\n7\n5", output: "7" },
+    starter: "",
+    tests: [
+      { input: "3\n7\n5", expected: "7" },
+      { input: "1\n2\n3", expected: "3" },
+      { input: "9\n9\n9", expected: "9" },
+      { input: "-5\n-3\n-8", expected: "-3" },
+      { input: "0\n-1\n1", expected: "1" }
+    ]
+  },
+  {
+    id: 10, part: 1,
+    title: "Сравнение двух чисел",
+    level: "средняя",
+    body: `
+      <p>Даны два целых числа. Определите, какое из них больше.</p>
+      <p><b>Входные данные:</b> два целых числа, каждое на отдельной строке.</p>
+      <p><b>Выходные данные:</b></p>
+      <ul>
+        <li><span class="inline-code">Первое больше</span> — если первое число больше второго;</li>
+        <li><span class="inline-code">Второе больше</span> — если второе число больше первого;</li>
+        <li><span class="inline-code">Равны</span> — если числа равны.</li>
+      </ul>
+      <p class="hint">Здесь три исхода — используйте вложенный <span class="inline-code">if</span> внутри ветки <span class="inline-code">else</span>.</p>
+    `,
+    example: { input: "5\n3", output: "Первое больше" },
+    starter: "",
+    tests: [
+      { input: "5\n3", expected: "Первое больше" },
+      { input: "3\n5", expected: "Второе больше" },
+      { input: "5\n5", expected: "Равны" },
+      { input: "-1\n0", expected: "Второе больше" },
+      { input: "0\n-5", expected: "Первое больше" },
+      { input: "0\n0", expected: "Равны" }
+    ]
+  },
+  {
+    id: 11, part: 1,
+    title: "Есть ли положительное?",
+    level: "средняя",
+    body: `
+      <p>Даны два целых числа. Проверьте, есть ли среди них хотя бы одно положительное.</p>
+      <p><b>Входные данные:</b> два целых числа, каждое на отдельной строке.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Есть положительное</span> или <span class="inline-code">Нет положительных</span>.</p>
+      <p class="hint">Проверку делаем без <span class="inline-code">or</span> — вложенным <span class="inline-code">if</span> в ветке <span class="inline-code">else</span>.</p>
+    `,
+    example: { input: "5\n-3", output: "Есть положительное" },
+    starter: "",
+    tests: [
+      { input: "5\n-3", expected: "Есть положительное" },
+      { input: "-5\n3", expected: "Есть положительное" },
+      { input: "5\n3", expected: "Есть положительное" },
+      { input: "-5\n-3", expected: "Нет положительных" },
+      { input: "0\n3", expected: "Есть положительное" },
+      { input: "0\n0", expected: "Нет положительных" },
+      { input: "0\n-7", expected: "Нет положительных" }
+    ]
+  },
+  {
+    id: 12, part: 1,
+    title: "Зачёт или незачёт",
+    level: "средняя",
+    body: `
+      <p>Дано целое число — балл за зачёт. Зачёт ставится, если балл не меньше 50.</p>
+      <p><b>Входные данные:</b> одно целое число — балл.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Зачёт</span> или <span class="inline-code">Незачёт</span>.</p>
+    `,
+    example: { input: "60", output: "Зачёт" },
+    starter: "",
+    tests: [
+      { input: "60", expected: "Зачёт" },
+      { input: "50", expected: "Зачёт" },
+      { input: "49", expected: "Незачёт" },
+      { input: "100", expected: "Зачёт" },
+      { input: "0", expected: "Незачёт" }
+    ]
+  },
+  {
+    id: 13, part: 1,
+    title: "Положительное, отрицательное или ноль",
+    level: "средняя",
+    body: `
+      <p>Дано целое число. Определите, какое оно: положительное, отрицательное или ноль.</p>
+      <p><b>Входные данные:</b> одно целое число.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Положительное</span>, <span class="inline-code">Отрицательное</span> или <span class="inline-code">Ноль</span>.</p>
+      <p class="hint">Делаем без <span class="inline-code">and</span> и без <span class="inline-code">elif</span>. Вложенный <span class="inline-code">if</span>: сначала проверяем «больше нуля», в ветке <span class="inline-code">else</span> — второй <span class="inline-code">if</span> на «меньше нуля», и его <span class="inline-code">else</span> даёт ноль.</p>
+    `,
+    example: { input: "5", output: "Положительное" },
+    starter: "",
+    tests: [
+      { input: "5", expected: "Положительное" },
+      { input: "-3", expected: "Отрицательное" },
+      { input: "0", expected: "Ноль" },
+      { input: "100", expected: "Положительное" },
+      { input: "-42", expected: "Отрицательное" }
+    ]
+  },
+  {
+    id: 14, part: 1,
+    title: "Тип треугольника по сторонам",
+    level: "средняя",
+    body: `
+      <p>Даны три целых числа — длины сторон треугольника. Определите его тип:</p>
+      <ul>
+        <li><b>равносторонний</b> — все три стороны равны;</li>
+        <li><b>равнобедренный</b> — ровно две стороны равны;</li>
+        <li><b>разносторонний</b> — все стороны разные.</li>
+      </ul>
+      <p><b>Входные данные:</b> три целых числа, каждое на отдельной строке.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Равносторонний</span>, <span class="inline-code">Равнобедренный</span> или <span class="inline-code">Разносторонний</span>.</p>
+      <p class="hint">Решаем вложенными <span class="inline-code">if</span>, без <span class="inline-code">and</span> и <span class="inline-code">or</span>.</p>
+    `,
+    example: { input: "3\n3\n4", output: "Равнобедренный" },
+    starter: "",
+    tests: [
+      { input: "3\n3\n3", expected: "Равносторонний" },
+      { input: "5\n5\n5", expected: "Равносторонний" },
+      { input: "3\n3\n4", expected: "Равнобедренный" },
+      { input: "4\n5\n5", expected: "Равнобедренный" },
+      { input: "3\n4\n5", expected: "Разносторонний" },
+      { input: "6\n7\n8", expected: "Разносторонний" }
+    ]
+  },
+  {
+    id: 15, part: 1,
+    title: "Оценка за экзамен",
+    level: "средняя",
+    body: `
+      <p>Дано целое число — балл от 0 до 100. Выведите оценку по правилам:</p>
+      <ul>
+        <li>90–100 — <span class="inline-code">Отлично</span>;</li>
+        <li>75–89 — <span class="inline-code">Хорошо</span>;</li>
+        <li>50–74 — <span class="inline-code">Удовлетворительно</span>;</li>
+        <li>меньше 50 — <span class="inline-code">Не сдал</span>.</li>
+      </ul>
+      <p><b>Входные данные:</b> одно целое число — балл.</p>
+      <p><b>Выходные данные:</b> одно слово-оценка.</p>
+      <p class="hint">Снова никаких <span class="inline-code">elif</span>. Каждое следующее условие — во вложенном <span class="inline-code">else</span> предыдущего. Проверяйте сверху вниз.</p>
+    `,
+    example: { input: "80", output: "Хорошо" },
+    starter: "",
+    tests: [
+      { input: "95", expected: "Отлично" },
+      { input: "90", expected: "Отлично" },
+      { input: "80", expected: "Хорошо" },
+      { input: "75", expected: "Хорошо" },
+      { input: "60", expected: "Удовлетворительно" },
+      { input: "50", expected: "Удовлетворительно" },
+      { input: "30", expected: "Не сдал" }
+    ]
+  },
+
+  /* ==========================================================
+     Часть 2. Логические операторы and / or — 15 задач
+     ========================================================== */
+  {
+    id: 16, part: 2,
+    title: "Диапазон 10–20",
+    level: "лёгкая",
+    body: `
+      <p>Дано целое число. Проверьте, что оно лежит в диапазоне от 10 до 20 включительно — теперь уже через <span class="inline-code">and</span>.</p>
+      <p><b>Входные данные:</b> одно целое число.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">В диапазоне</span> или <span class="inline-code">Вне диапазона</span>.</p>
+      <p class="hint">Условие читается так: «число не меньше 10 <b>и</b> число не больше 20». Записывается через <span class="inline-code">x &gt;= 10 and x &lt;= 20</span>.</p>
+    `,
+    example: { input: "15", output: "В диапазоне" },
+    starter: "",
+    tests: [
+      { input: "15", expected: "В диапазоне" },
+      { input: "10", expected: "В диапазоне" },
+      { input: "20", expected: "В диапазоне" },
+      { input: "9", expected: "Вне диапазона" },
+      { input: "21", expected: "Вне диапазона" },
+      { input: "-5", expected: "Вне диапазона" }
+    ]
+  },
+  {
+    id: 17, part: 2,
+    title: "Трудоспособный возраст",
+    level: "лёгкая",
+    body: `
+      <p>Проверьте, что возраст человека от 18 до 65 лет включительно.</p>
+      <p><b>Входные данные:</b> одно целое число — возраст.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Трудоспособный возраст</span> или <span class="inline-code">Не трудоспособный возраст</span>.</p>
+    `,
+    example: { input: "30", output: "Трудоспособный возраст" },
+    starter: "",
+    tests: [
+      { input: "30", expected: "Трудоспособный возраст" },
+      { input: "18", expected: "Трудоспособный возраст" },
+      { input: "65", expected: "Трудоспособный возраст" },
+      { input: "17", expected: "Не трудоспособный возраст" },
+      { input: "66", expected: "Не трудоспособный возраст" },
+      { input: "0", expected: "Не трудоспособный возраст" }
+    ]
+  },
+  {
+    id: 18, part: 2,
+    title: "Логин и пароль",
+    level: "лёгкая",
+    body: `
+      <p>Программа запрашивает сначала логин, потом пароль.</p>
+      <p>Правильные данные: логин <span class="inline-code">admin</span> <b>и</b> пароль <span class="inline-code">secret</span>.</p>
+      <p><b>Входные данные:</b> две строки: сначала логин, затем пароль.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Добро пожаловать</span> или <span class="inline-code">Ошибка входа</span>.</p>
+      <p class="hint">Нужны оба условия сразу — соединяем их через <span class="inline-code">and</span>.</p>
+    `,
+    example: { input: "admin\nsecret", output: "Добро пожаловать" },
+    starter: "",
+    tests: [
+      { input: "admin\nsecret", expected: "Добро пожаловать" },
+      { input: "admin\n123", expected: "Ошибка входа" },
+      { input: "user\nsecret", expected: "Ошибка входа" },
+      { input: "user\n123", expected: "Ошибка входа" }
+    ]
+  },
+  {
+    id: 19, part: 2,
+    title: "Выходной день",
+    level: "лёгкая",
+    body: `
+      <p>Дана строка — день недели в нижнем регистре. Выходные — <span class="inline-code">суббота</span> и <span class="inline-code">воскресенье</span>.</p>
+      <p><b>Входные данные:</b> одна строка — день недели.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Выходной</span> или <span class="inline-code">Рабочий день</span>.</p>
+      <p class="hint">Условие — «день суббота <b>или</b> день воскресенье». Записывается через <span class="inline-code">or</span>.</p>
+    `,
+    example: { input: "суббота", output: "Выходной" },
+    starter: "",
+    tests: [
+      { input: "суббота", expected: "Выходной" },
+      { input: "воскресенье", expected: "Выходной" },
+      { input: "понедельник", expected: "Рабочий день" },
+      { input: "среда", expected: "Рабочий день" },
+      { input: "пятница", expected: "Рабочий день" }
+    ]
+  },
+  {
+    id: 20, part: 2,
+    title: "Кратно и 2, и 3",
+    level: "лёгкая",
+    body: `
+      <p>Дано целое число. Проверьте, что оно делится и на 2, и на 3 без остатка.</p>
+      <p><b>Входные данные:</b> одно целое число.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Подходит</span> или <span class="inline-code">Не подходит</span>.</p>
+      <p class="hint">Соедините два условия через <span class="inline-code">and</span>: <span class="inline-code">n % 2 == 0 and n % 3 == 0</span>.</p>
+    `,
+    example: { input: "12", output: "Подходит" },
+    starter: "",
+    tests: [
+      { input: "12", expected: "Подходит" },
+      { input: "6", expected: "Подходит" },
+      { input: "8", expected: "Не подходит" },
+      { input: "9", expected: "Не подходит" },
+      { input: "0", expected: "Подходит" },
+      { input: "30", expected: "Подходит" }
+    ]
+  },
+  {
+    id: 21, part: 2,
+    title: "Гласная буква",
+    level: "лёгкая",
+    body: `
+      <p>Дана одна буква (в нижнем регистре). Проверьте, является ли она одной из гласных <b>а</b>, <b>о</b>, <b>у</b>, <b>и</b>, <b>э</b>.</p>
+      <p>Другие гласные (е, ё, ы, ю, я) в этой задаче гласными не считаются — только эти пять.</p>
+      <p><b>Входные данные:</b> одна буква.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Гласная</span> или <span class="inline-code">Не гласная</span>.</p>
+      <p class="hint">Сравните букву с каждой из пяти через <span class="inline-code">or</span>.</p>
+    `,
+    example: { input: "а", output: "Гласная" },
+    starter: "",
+    tests: [
+      { input: "а", expected: "Гласная" },
+      { input: "о", expected: "Гласная" },
+      { input: "у", expected: "Гласная" },
+      { input: "и", expected: "Гласная" },
+      { input: "э", expected: "Гласная" },
+      { input: "к", expected: "Не гласная" },
+      { input: "м", expected: "Не гласная" }
+    ]
+  },
+  {
+    id: 22, part: 2,
+    title: "Скидка в магазине",
+    level: "средняя",
+    body: `
+      <p>Магазин даёт скидку покупателю, если ему <b>меньше 18 лет</b> <u>или</u> сумма его покупки <b>больше 5000</b>.</p>
+      <p><b>Входные данные:</b> два целых числа, каждое на отдельной строке: сначала возраст, затем сумма покупки.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Скидка предоставлена</span> или <span class="inline-code">Скидка не предоставлена</span>.</p>
+    `,
+    example: { input: "15\n3000", output: "Скидка предоставлена" },
+    starter: "",
+    tests: [
+      { input: "15\n3000", expected: "Скидка предоставлена" },
+      { input: "25\n6000", expected: "Скидка предоставлена" },
+      { input: "25\n3000", expected: "Скидка не предоставлена" },
+      { input: "15\n6000", expected: "Скидка предоставлена" },
+      { input: "18\n5000", expected: "Скидка не предоставлена" },
+      { input: "17\n100", expected: "Скидка предоставлена" }
+    ]
+  },
+  {
+    id: 23, part: 2,
+    title: "Треугольник существует?",
+    level: "средняя",
+    body: `
+      <p>Даны три целых числа — длины отрезков. Треугольник с такими сторонами существует, если каждая сторона меньше суммы двух других.</p>
+      <p>Другими словами, нужно, чтобы выполнялись сразу <b>все три</b> неравенства:</p>
+      <ul>
+        <li>a + b &gt; c;</li>
+        <li>a + c &gt; b;</li>
+        <li>b + c &gt; a.</li>
+      </ul>
+      <p><b>Входные данные:</b> три целых числа, каждое на отдельной строке.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Треугольник существует</span> или <span class="inline-code">Треугольник не существует</span>.</p>
+    `,
+    example: { input: "3\n4\n5", output: "Треугольник существует" },
+    starter: "",
+    tests: [
+      { input: "3\n4\n5", expected: "Треугольник существует" },
+      { input: "1\n2\n3", expected: "Треугольник не существует" },
+      { input: "5\n5\n5", expected: "Треугольник существует" },
+      { input: "10\n1\n1", expected: "Треугольник не существует" },
+      { input: "7\n8\n9", expected: "Треугольник существует" }
+    ]
+  },
+  {
+    id: 24, part: 2,
+    title: "Число в двух диапазонах",
+    level: "средняя",
+    body: `
+      <p>Дано целое число. Проверьте, попадает ли оно хотя бы в один из двух диапазонов:</p>
+      <ul>
+        <li>от 0 до 10 включительно <b>или</b></li>
+        <li>от 20 до 30 включительно.</li>
+      </ul>
+      <p><b>Входные данные:</b> одно целое число.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Попадает</span> или <span class="inline-code">Не попадает</span>.</p>
+      <p class="hint">Каждое из условий само по себе требует <span class="inline-code">and</span> (число не меньше нижней границы и не больше верхней). Между собой условия соединяем через <span class="inline-code">or</span>.</p>
+    `,
+    example: { input: "5", output: "Попадает" },
+    starter: "",
+    tests: [
+      { input: "5", expected: "Попадает" },
+      { input: "0", expected: "Попадает" },
+      { input: "10", expected: "Попадает" },
+      { input: "25", expected: "Попадает" },
+      { input: "30", expected: "Попадает" },
+      { input: "15", expected: "Не попадает" },
+      { input: "40", expected: "Не попадает" },
+      { input: "-1", expected: "Не попадает" }
+    ]
+  },
+  {
+    id: 25, part: 2,
+    title: "Можно ли за руль",
+    level: "средняя",
+    body: `
+      <p>Водить машину можно, если возраст <b>не меньше 18 лет</b> <u>и</u> есть водительские права.</p>
+      <p><b>Входные данные:</b> две строки. Сначала целое число — возраст. Затем слово <span class="inline-code">да</span> или <span class="inline-code">нет</span> — есть ли права.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Можно за руль</span> или <span class="inline-code">Нельзя</span>.</p>
+    `,
+    example: { input: "20\nда", output: "Можно за руль" },
+    starter: "",
+    tests: [
+      { input: "20\nда", expected: "Можно за руль" },
+      { input: "18\nда", expected: "Можно за руль" },
+      { input: "20\nнет", expected: "Нельзя" },
+      { input: "17\nда", expected: "Нельзя" },
+      { input: "17\nнет", expected: "Нельзя" },
+      { input: "30\nда", expected: "Можно за руль" }
+    ]
+  },
+  {
+    id: 26, part: 2,
+    title: "Високосный год",
+    level: "средняя",
+    body: `
+      <p>Год называется <b>високосным</b>, если он делится на 4 и при этом <u>не делится на 100</u>, <b>или</b> если он делится на 400.</p>
+      <p>Например: 2024 — високосный, 1900 — нет, 2000 — високосный.</p>
+      <p><b>Входные данные:</b> одно целое число — год.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Високосный</span> или <span class="inline-code">Не високосный</span>.</p>
+      <p class="hint">Здесь вместе используют <span class="inline-code">and</span> и <span class="inline-code">or</span>. Правило целиком: <span class="inline-code">(год % 4 == 0 and год % 100 != 0) or год % 400 == 0</span>.</p>
+    `,
+    example: { input: "2024", output: "Високосный" },
+    starter: "",
+    tests: [
+      { input: "2024", expected: "Високосный" },
+      { input: "2023", expected: "Не високосный" },
+      { input: "1900", expected: "Не високосный" },
+      { input: "2000", expected: "Високосный" },
+      { input: "1600", expected: "Високосный" },
+      { input: "1700", expected: "Не високосный" }
+    ]
+  },
+  {
+    id: 27, part: 2,
+    title: "Сдал ли экзамен",
+    level: "средняя",
+    body: `
+      <p>Студент сдал экзамен, если выполнены оба условия:</p>
+      <ul>
+        <li>оценка <b>не меньше 4</b>;</li>
+        <li>и при этом он посетил <b>не меньше 80 %</b> занятий <u>или</u> выполнил все домашние задания.</li>
+      </ul>
+      <p><b>Входные данные:</b> три строки. Сначала оценка (целое число), затем посещаемость в процентах (целое число), затем слово <span class="inline-code">да</span> или <span class="inline-code">нет</span> — выполнены ли все ДЗ.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Экзамен сдан</span> или <span class="inline-code">Экзамен не сдан</span>.</p>
+      <p class="hint">Логика: <span class="inline-code">оценка &gt;= 4 and (посещаемость &gt;= 80 or дз == "да")</span>. Скобки нужны обязательно.</p>
+    `,
+    example: { input: "5\n90\nнет", output: "Экзамен сдан" },
+    starter: "",
+    tests: [
+      { input: "5\n90\nнет", expected: "Экзамен сдан" },
+      { input: "4\n85\nнет", expected: "Экзамен сдан" },
+      { input: "4\n50\nда", expected: "Экзамен сдан" },
+      { input: "3\n100\nда", expected: "Экзамен не сдан" },
+      { input: "4\n50\nнет", expected: "Экзамен не сдан" },
+      { input: "2\n30\nнет", expected: "Экзамен не сдан" }
+    ]
+  },
+  {
+    id: 28, part: 2,
+    title: "Камень-ножницы-бумага",
+    level: "средняя",
+    body: `
+      <p>Введены два хода: сначала ход игрока 1, затем ход игрока 2. Возможные ходы: <span class="inline-code">камень</span>, <span class="inline-code">ножницы</span>, <span class="inline-code">бумага</span>.</p>
+      <p>Правила: камень бьёт ножницы, ножницы бьют бумагу, бумага бьёт камень.</p>
+      <p><b>Входные данные:</b> две строки — ход первого игрока, затем ход второго.</p>
+      <p><b>Выходные данные:</b></p>
+      <ul>
+        <li><span class="inline-code">Первый победил</span> — если выиграл игрок 1;</li>
+        <li><span class="inline-code">Второй победил</span> — если выиграл игрок 2;</li>
+        <li><span class="inline-code">Ничья</span> — если ходы одинаковы.</li>
+      </ul>
+      <p class="hint">Победа первого — это <span class="inline-code">or</span> из трёх пар «ситуация победы»: <span class="inline-code">(камень и ножницы) or (ножницы и бумага) or (бумага и камень)</span>. Каждая пара — через <span class="inline-code">and</span>.</p>
+    `,
+    example: { input: "камень\nножницы", output: "Первый победил" },
+    starter: "",
+    tests: [
+      { input: "камень\nножницы", expected: "Первый победил" },
+      { input: "ножницы\nбумага", expected: "Первый победил" },
+      { input: "бумага\nкамень", expected: "Первый победил" },
+      { input: "ножницы\nкамень", expected: "Второй победил" },
+      { input: "бумага\nножницы", expected: "Второй победил" },
+      { input: "камень\nбумага", expected: "Второй победил" },
+      { input: "камень\nкамень", expected: "Ничья" }
+    ]
+  },
+  {
+    id: 29, part: 2,
+    title: "Три числа по возрастанию",
+    level: "средняя",
+    body: `
+      <p>Даны три целых числа. Проверьте, что они упорядочены строго по возрастанию: каждое следующее строго больше предыдущего.</p>
+      <p><b>Входные данные:</b> три целых числа, каждое на отдельной строке.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">По возрастанию</span> или <span class="inline-code">Не по возрастанию</span>.</p>
+      <p class="hint">Нужны оба условия одновременно: <span class="inline-code">a &lt; b and b &lt; c</span>.</p>
+    `,
+    example: { input: "1\n2\n3", output: "По возрастанию" },
+    starter: "",
+    tests: [
+      { input: "1\n2\n3", expected: "По возрастанию" },
+      { input: "3\n2\n1", expected: "Не по возрастанию" },
+      { input: "1\n1\n2", expected: "Не по возрастанию" },
+      { input: "-5\n-1\n0", expected: "По возрастанию" },
+      { input: "5\n5\n5", expected: "Не по возрастанию" },
+      { input: "1\n3\n2", expected: "Не по возрастанию" }
+    ]
+  },
+  {
+    id: 30, part: 2,
+    title: "Прямоугольный треугольник",
+    level: "средняя",
+    body: `
+      <p>Даны три целых числа — длины сторон треугольника. Определите, является ли треугольник прямоугольным.</p>
+      <p>Треугольник прямоугольный, если квадрат одной стороны равен сумме квадратов двух других сторон (теорема Пифагора).</p>
+      <p>Например: 3, 4, 5 — прямоугольный, потому что 9 + 16 = 25. При этом неважно, какая сторона оказалась гипотенузой — проверить нужно все три варианта.</p>
+      <p><b>Входные данные:</b> три целых числа, каждое на отдельной строке.</p>
+      <p><b>Выходные данные:</b> <span class="inline-code">Прямоугольный</span> или <span class="inline-code">Не прямоугольный</span>.</p>
+      <p class="hint">Используйте <span class="inline-code">or</span>, чтобы проверить три возможных гипотенузы: <span class="inline-code">(a² + b² == c²) or (a² + c² == b²) or (b² + c² == a²)</span>.</p>
+    `,
+    example: { input: "3\n4\n5", output: "Прямоугольный" },
+    starter: "",
+    tests: [
+      { input: "3\n4\n5", expected: "Прямоугольный" },
+      { input: "5\n12\n13", expected: "Прямоугольный" },
+      { input: "6\n8\n10", expected: "Прямоугольный" },
+      { input: "5\n5\n5", expected: "Не прямоугольный" },
+      { input: "3\n4\n6", expected: "Не прямоугольный" },
+      { input: "1\n2\n3", expected: "Не прямоугольный" }
+    ]
+  }
+];
+
+/* ============================================================
+   Состояние
+   ============================================================ */
+const STORAGE_CODE = id => `py_trainer_if_code_v6_${id}`;
+const STORAGE_SOLVED = 'py_trainer_if_solved_v6';
+const STORAGE_CURRENT = 'py_trainer_if_current_v6';
+
+let currentTaskId = parseInt(localStorage.getItem(STORAGE_CURRENT) || "1", 10);
+let solved = new Set(JSON.parse(localStorage.getItem(STORAGE_SOLVED) || "[]"));
+let pyodide = null;
+let pyReady = false;
+let editor = null;
+
+/* ============================================================
+   Утилиты
+   ============================================================ */
+function el(id) { return document.getElementById(id); }
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function normalizeOutput(s) {
+  if (s == null) return '';
+  return s.replace(/\r\n/g, '\n')
+    .split('\n')
+    .map(l => l.trim())
+    .join('\n')
+    .replace(/^\n+|\n+$/g, '');
+}
+
+function linesEqual(a, b) {
+  if (a === b) return true;
+  if (a.toUpperCase() === b.toUpperCase()) return true;
+  const rx = /-?\d+(?:\.\d+)?/g;
+  const na = a.match(rx) || [];
+  const nb = b.match(rx) || [];
+  if (na.length === 0 || nb.length === 0) return false;
+  if (na.length !== nb.length) return false;
+  const ta = a.replace(rx, '\u0000');
+  const tb = b.replace(rx, '\u0000');
+  if (ta !== tb) return false;
+  for (let i = 0; i < na.length; i++) {
+    const x = parseFloat(na[i]);
+    const y = parseFloat(nb[i]);
+    if (x === y) continue;
+    if (Math.abs(x - y) < 1e-4) continue;
+    return false;
+  }
+  return true;
+}
+
+function compareOutput(actual, expected) {
+  const a = normalizeOutput(actual).split('\n');
+  const e = normalizeOutput(expected).split('\n');
+  if (a.length !== e.length) {
+    return { ok: false, reason: `Ожидалось строк: ${e.length}, получено: ${a.length}` };
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (!linesEqual(a[i], e[i])) {
+      return { ok: false, reason: `Строка ${i + 1} отличается` };
+    }
+  }
+  return { ok: true };
+}
+
+/* ============================================================
+   Pyodide
+   ============================================================ */
+async function initPyodide() {
+  try {
+    setStatus('loading', 'Загрузка Python… это может занять несколько секунд.');
+    pyodide = await loadPyodide({
+      indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
+    });
+    pyReady = true;
+    setStatus('ready', 'Python готов. Можно решать задачи.');
+    updateButtons();
+  } catch (e) {
+    setStatus('error', 'Не удалось загрузить Python: ' + e.message);
+  }
+}
+
+function setStatus(kind, text) {
+  const dot = el('status-dot');
+  dot.classList.remove('ready', 'error');
+  if (kind === 'ready') dot.classList.add('ready');
+  if (kind === 'error') dot.classList.add('error');
+  el('status-text').textContent = text;
+}
+
+async function runPython(code, inputText) {
+  pyodide.globals.set('_user_code', code);
+  pyodide.globals.set('_user_input', inputText);
+  const resJson = await pyodide.runPythonAsync(`
+import sys, json
+from io import StringIO
+
+_stdin = StringIO(_user_input)
+_stdout = StringIO()
+_old_in, _old_out = sys.stdin, sys.stdout
+sys.stdin = _stdin
+sys.stdout = _stdout
+
+_err = None
+try:
+    exec(compile(_user_code, "<solution>", "exec"), {"__name__": "__main__"})
+except SystemExit:
+    pass
+except BaseException as e:
+    _err = f"{type(e).__name__}: {e}"
+finally:
+    sys.stdin = _old_in
+    sys.stdout = _old_out
+
+json.dumps({"out": _stdout.getvalue(), "err": _err})
+`);
+  return JSON.parse(resJson);
+}
+
+/* ============================================================
+   CodeMirror
+   ============================================================ */
+function getCode() { return editor ? editor.getValue() : el('code').value; }
+
+function setCode(v) {
+  if (editor) editor.setValue(v);
+  else el('code').value = v;
+  localStorage.setItem(STORAGE_CODE(currentTaskId), v);
+}
+
+function initEditor() {
+  editor = CodeMirror.fromTextArea(el('code'), {
+    mode: 'python',
+    theme: 'dracula',
+    lineNumbers: true,
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: false,
+    lineWrapping: true,
+    autoCloseBrackets: true,
+    matchBrackets: true,
+    extraKeys: {
+      'Ctrl-Space': 'autocomplete',
+      'Cmd-Space': 'autocomplete',
+      'Tab': (cm) => cm.replaceSelection('    ', 'end'),
+      'Shift-Tab': 'indentLess',
+      'Ctrl-/': 'toggleComment',
+      'Cmd-/': 'toggleComment',
+      'Ctrl-Enter': () => runAndHighlight('run'),
+      'Cmd-Enter':  () => runAndHighlight('run'),
+      'Shift-Ctrl-Enter': () => runAndHighlight('check'),
+      'Shift-Cmd-Enter':  () => runAndHighlight('check')
+    }
+  });
+
+  editor.on('inputRead', (cm, change) => {
+    if (!change.text) return;
+    const lastChar = change.text[0];
+    if (lastChar === '.' || /[a-zA-Z_]/.test(lastChar)) {
+      const token = cm.getTokenAt(cm.getCursor());
+      const word = (token.string || '').replace(/[^a-zA-Z0-9_]/g, '');
+      if (lastChar === '.' || word.length >= 2) {
+        cm.showHint({ completeSingle: false });
+      }
+    }
+  });
+
+  editor.on('change', () => {
+    localStorage.setItem(STORAGE_CODE(currentTaskId), editor.getValue());
+  });
+}
+
+function runAndHighlight(mode) {
+  if (!pyReady) return;
+  if (mode === 'check') onCheck();
+  else onRun();
+}
+
+/* ============================================================
+   UI
+   ============================================================ */
+function renderTaskList() {
+  const listIds = { 1: 'list-part1', 2: 'list-part2' };
+  const lists = {};
+  Object.values(listIds).forEach(id => {
+    const node = el(id);
+    if (node) { node.innerHTML = ''; lists[id] = node; }
+  });
+
+  TASKS.forEach(t => {
+    const listId = listIds[t.part];
+    const container = lists[listId];
+    if (!container) return;
+
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.dataset.id = t.id;
+    if (t.id === currentTaskId) btn.classList.add('active');
+    if (solved.has(t.id)) btn.classList.add('solved');
+    btn.innerHTML = `<span class="num"><span>${t.id}</span></span><span>${escapeHtml(t.title)}</span>`;
+    btn.addEventListener('click', () => selectTask(t.id));
+    li.appendChild(btn);
+    container.appendChild(li);
+  });
+}
+
+function updateProgress() {
+  const total = TASKS.length;
+  const done = solved.size;
+  el('progress-text').textContent = `${done} / ${total}`;
+  el('progress-bar').style.width = (done / total * 100) + '%';
+}
+
+function selectTask(id) {
+  const task = TASKS.find(t => t.id === id);
+  if (!task) return;
+  currentTaskId = id;
+  localStorage.setItem(STORAGE_CURRENT, String(id));
+
+  document.querySelectorAll('.task-list button').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.id, 10) === id);
+  });
+
+  el('task-title').textContent = `Задача ${task.id}. ${task.title}`;
+  const lvl = el('task-level');
+  lvl.textContent = task.level;
+  lvl.className = 'badge ' + (task.level === 'лёгкая' ? 'easy' : 'medium');
+
+  el('task-body').innerHTML = `
+    ${task.body}
+    <div class="example-grid">
+      <div class="example-box">
+        <div class="label">Пример ввода</div>
+        <pre>${escapeHtml(task.example.input)}</pre>
+      </div>
+      <div class="example-box">
+        <div class="label">Пример вывода</div>
+        <pre>${escapeHtml(task.example.output)}</pre>
+      </div>
+    </div>
+  `;
+
+  const savedCode = localStorage.getItem(STORAGE_CODE(task.id));
+  const code = savedCode !== null ? savedCode : task.starter;
+  if (editor) {
+    editor.setValue(code);
+    editor.clearHistory();
+    editor.refresh();
+  } else {
+    el('code').value = code;
+  }
+
+  el('output').textContent = 'Здесь появится результат запуска.';
+  el('output').classList.remove('err');
+  el('tests').innerHTML = '<li>Нажмите «Отправить на проверку», чтобы прогнать код по тестам.</li>';
+
+  updateButtons();
+}
+
+function updateButtons() {
+  const canRun = pyReady;
+  el('btn-run').disabled = !canRun;
+  el('btn-check').disabled = !canRun;
+}
+
+/* ============================================================
+   Действия
+   ============================================================ */
+async function onRun() {
+  const code = getCode();
+  const task = TASKS.find(t => t.id === currentTaskId);
+  const testInput = task.tests[0].input;
+
+  el('output').textContent = 'Выполняется…';
+  el('output').classList.remove('err');
+  el('tests').innerHTML = '<li>Нажмите «Отправить на проверку», чтобы прогнать код по тестам.</li>';
+
+  try {
+    const { out, err } = await runPython(code, testInput);
+    if (err) {
+      el('output').textContent = (out || '') + (out ? '\n' : '') + '❌ ' + err;
+      el('output').classList.add('err');
+    } else {
+      el('output').textContent = out || '(программа не вывела ничего)';
+    }
+  } catch (e) {
+    el('output').textContent = 'Ошибка выполнения: ' + e.message;
+    el('output').classList.add('err');
+  }
+}
+
+async function onCheck() {
+  const code = getCode();
+  const task = TASKS.find(t => t.id === currentTaskId);
+
+  el('output').textContent = 'Проверка тестов…';
+  el('output').classList.remove('err');
+  el('tests').innerHTML = '';
+
+  const results = [];
+  for (let i = 0; i < task.tests.length; i++) {
+    const test = task.tests[i];
+    let result;
+    try {
+      result = await runPython(code, test.input);
+    } catch (e) {
+      result = { out: '', err: 'Ошибка выполнения: ' + e.message };
+    }
+
+    let ok = false;
+    let reason = '';
+    if (result.err) {
+      ok = false;
+      reason = result.err;
+    } else {
+      const cmp = compareOutput(result.out, test.expected);
+      ok = cmp.ok;
+      if (!ok) reason = cmp.reason;
+    }
+
+    results.push({ ok, index: i + 1, test, out: result.out, reason });
+  }
+
+  const allPassed = results.every(r => r.ok);
+
+  const shownIdx = 0;
+
+  const testsContainer = el('tests');
+  testsContainer.appendChild(buildTestLi(results[shownIdx]));
+
+  const others = results.filter((_, idx) => idx !== shownIdx);
+  if (others.length > 0) {
+    const details = document.createElement('details');
+    details.className = 'details-tests';
+
+    const summary = document.createElement('summary');
+    const failsInOthers = others.filter(r => !r.ok).length;
+    summary.textContent = failsInOthers > 0
+      ? `Показать остальные тесты (не пройдено: ${failsInOthers} из ${others.length})`
+      : `Показать остальные тесты (${others.length})`;
+    details.appendChild(summary);
+
+    const body = document.createElement('div');
+    body.className = 'body';
+    others.forEach(r => body.appendChild(buildTestLi(r)));
+    details.appendChild(body);
+
+    testsContainer.appendChild(details);
+  }
+
+  if (allPassed) {
+    el('output').textContent = '✅ Все тесты пройдены!';
+    solved.add(task.id);
+    localStorage.setItem(STORAGE_SOLVED, JSON.stringify([...solved]));
+    renderTaskList();
+    updateProgress();
+  } else {
+    el('output').textContent = '❌ Не все тесты пройдены. Смотрите детали ниже.';
+    el('output').classList.add('err');
+  }
+}
+
+function buildTestLi(r) {
+  const li = document.createElement('li');
+  li.className = r.ok ? 'ok' : 'fail';
+
+  const icon = document.createElement('span');
+  icon.className = 'icon';
+  icon.textContent = r.ok ? '✓' : '✕';
+  li.appendChild(icon);
+
+  const content = document.createElement('div');
+  content.style.flex = '1';
+  content.innerHTML = `<b>Тест ${r.index}</b>${r.ok ? ' — пройден' : ' — не пройден'}`;
+
+  if (!r.ok) {
+    const detail = document.createElement('div');
+    detail.className = 'test-detail';
+    detail.innerHTML = `
+      <div class="box"><span class="label">Ввод</span>${escapeHtml(r.test.input)}</div>
+      <div class="box"><span class="label">Ожидалось</span>${escapeHtml(r.test.expected)}</div>
+      <div class="box"><span class="label">Получено</span>${escapeHtml(r.out || '(пусто)')}</div>
+      <div class="box"><span class="label">Сообщение</span>${escapeHtml(r.reason || '')}</div>
+    `;
+    content.appendChild(detail);
+  }
+
+  li.appendChild(content);
+  return li;
+}
+
+function onReset() {
+  const task = TASKS.find(t => t.id === currentTaskId);
+  if (!confirm('Сбросить код к начальному варианту?')) return;
+  setCode(task.starter);
+}
+
+/* ============================================================
+   Инициализация
+   ============================================================ */
+function boot() {
+  renderTaskList();
+  updateProgress();
+
+  initEditor();
+  selectTask(currentTaskId);
+
+  el('btn-run').addEventListener('click', onRun);
+  el('btn-check').addEventListener('click', onCheck);
+  el('btn-reset').addEventListener('click', onReset);
+
+  initPyodide();
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>
