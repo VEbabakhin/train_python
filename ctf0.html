@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИБ 7 класс · Занятие 1. Информационная безопасность</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+        --bg: #f4f6fb;
+        --card: #ffffff;
+        --text: #1e293b;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --blue: #3b82f6;
+        --blue-dark: #2563eb;
+        --green: #16a34a;
+        --green-soft: #dcfce7;
+        --red: #dc2626;
+        --red-soft: #fee2e2;
+        --amber: #d97706;
+        --amber-soft: #fef3c7;
+        --purple: #7c3aed;
+        --shadow: 0 1px 3px rgba(15,23,42,.06), 0 4px 12px rgba(15,23,42,.04);
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        background: var(--bg); color: var(--text); line-height: 1.6;
+        padding: 24px 16px 80px; -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 980px; margin: 0 auto; }
+
+    .progress-wrap {
+        position: sticky; top: 0; z-index: 50;
+        background: rgba(244,246,251,.92); backdrop-filter: blur(8px);
+        padding: 10px 0 14px; margin-bottom: 8px;
+    }
+    .progress-bar { height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+    .progress-fill {
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, #60a5fa, #3b82f6);
+        border-radius: 99px; transition: width .35s ease;
+    }
+    .progress-label {
+        display: flex; justify-content: space-between;
+        font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 500;
+    }
+
+    header {
+        background: var(--card); border-radius: 16px;
+        padding: 32px 36px; box-shadow: var(--shadow);
+        margin-bottom: 20px; border: 1px solid var(--line);
+    }
+    .eyebrow {
+        font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px;
+        color: var(--blue); font-weight: 600; margin-bottom: 8px;
+    }
+    h1 { font-size: 28px; font-weight: 700; color: #0f172a; letter-spacing: -0.4px; margin-bottom: 10px; line-height: 1.25; }
+    .lead { color: var(--muted); font-size: 15px; max-width: 700px; }
+
+    .tabs {
+        display: flex; gap: 6px; margin-bottom: 20px;
+        background: var(--card); padding: 6px; border-radius: 14px;
+        border: 1px solid var(--line); box-shadow: var(--shadow);
+    }
+    .tab {
+        flex: 1; padding: 12px 16px; border-radius: 10px;
+        border: none; background: transparent; font-family: inherit;
+        font-size: 14px; font-weight: 600; color: var(--muted);
+        cursor: pointer; transition: all .2s; text-align: center;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .tab:hover { color: var(--text); background: #f1f5f9; }
+    .tab.active { background: var(--blue); color: #fff; box-shadow: 0 4px 12px rgba(59,130,246,.3); }
+    .tab-badge {
+        background: rgba(255,255,255,.25); color: inherit;
+        padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700;
+    }
+    .tab:not(.active) .tab-badge { background: #e2e8f0; color: #64748b; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn .3s ease; }
+
+    section {
+        background: var(--card); border-radius: 16px;
+        padding: 28px 36px; box-shadow: var(--shadow);
+        margin-bottom: 24px; border: 1px solid var(--line);
+    }
+    h2 { font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.2px; }
+    .section-sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+    h3 { font-size: 16px; font-weight: 600; color: #334155; margin-bottom: 8px; }
+    p { margin-bottom: 12px; color: #334155; }
+    ul, ol { margin-left: 22px; margin-bottom: 14px; color: #334155; }
+    li { margin-bottom: 6px; }
+
+    .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 8px 0 20px; }
+    .pillar {
+        background: #f8fafc; border: 1px solid var(--line);
+        border-radius: 14px; padding: 20px 18px; text-align: center;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .pillar:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(15,23,42,.08); }
+    .pillar svg { width: 60px; height: 60px; margin-bottom: 10px; }
+    .pillar .title { font-weight: 700; font-size: 15px; color: #0f172a; margin-bottom: 6px; }
+    .pillar .desc { font-size: 13px; color: var(--muted); line-height: 1.5; text-align: left; }
+    .pillar .desc ul { margin: 6px 0 0 18px; }
+
+    .threats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 8px; }
+    .threat {
+        background: #f8fafc; border: 1px solid var(--line);
+        border-radius: 12px; padding: 16px 18px;
+    }
+    .threat-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 8px; }
+    .threat svg { flex-shrink: 0; width: 36px; height: 36px; }
+    .threat .th-title { font-weight: 600; font-size: 14px; color: #0f172a; margin-bottom: 2px; }
+    .threat .th-desc { font-size: 13px; color: #475569; line-height: 1.5; }
+    .threat .th-example {
+        font-size: 12.5px; color: #64748b; line-height: 1.5;
+        background: #fff; border-left: 3px solid #cbd5e1;
+        padding: 8px 12px; border-radius: 0 6px 6px 0; margin-top: 8px;
+    }
+    .threat .th-example strong { color: #334155; }
+
+    .stages { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .stage {
+        display: flex; gap: 14px; align-items: flex-start;
+        background: linear-gradient(90deg, #eff6ff, #f8fafc);
+        border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px;
+        transition: transform .2s;
+    }
+    .stage:hover { transform: translateX(4px); }
+    .stage-num {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: var(--blue); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .stage-body { flex: 1; }
+    .stage-title { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 3px; }
+    .stage-text { font-size: 13px; color: #475569; line-height: 1.5; }
+    .stage-example { font-size: 12.5px; color: #64748b; margin-top: 4px; font-style: italic; }
+
+    .example {
+        background: #fffbeb; border-left: 4px solid #f59e0b;
+        border-radius: 0 10px 10px 0; padding: 14px 20px; margin-bottom: 14px;
+    }
+    .example .label {
+        font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+        color: #b45309; font-weight: 700; margin-bottom: 6px;
+    }
+    .example .body { font-size: 14px; color: #78350f; }
+
+    .task {
+        background: #ffffff; border: 1px solid var(--line);
+        border-radius: 14px; padding: 22px 24px; margin-bottom: 18px;
+        transition: border-color .2s;
+    }
+    .task.correct { border-color: #86efac; background: #f0fdf4; }
+    .task.incorrect { border-color: #fca5a5; background: #fef2f2; }
+
+    .task-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .task-num {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: #eff6ff; color: var(--blue);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+    .task-title { font-weight: 600; font-size: 15px; color: #0f172a; }
+
+    .options label {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px; border: 1px solid var(--line);
+        border-radius: 10px; margin-bottom: 8px; cursor: pointer;
+        transition: all .15s; font-size: 14px; color: #334155;
+    }
+    .options label:hover { border-color: #cbd5e1; background: #f8fafc; }
+    .options label.selected { border-color: var(--blue); background: #eff6ff; }
+    .options input { transform: scale(1.1); accent-color: var(--blue); }
+
+    select {
+        padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px;
+        font-size: 14px; background: #fff; color: #1e293b;
+        min-width: 220px; font-family: inherit; cursor: pointer;
+    }
+    select:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+    .match-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+    .match-row .left { flex: 1; min-width: 220px; font-size: 14px; color: #334155; }
+
+    input[type="text"] {
+        padding: 9px 12px; border: 1px solid #cbd5e1;
+        border-radius: 8px; font-size: 14px; font-family: inherit;
+        width: 100%; max-width: 320px; transition: border-color .15s;
+    }
+    input[type="text"]:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+
+    .btn {
+        background: var(--blue); color: #fff; border: none;
+        padding: 9px 22px; border-radius: 8px; font-size: 14px;
+        font-weight: 500; cursor: pointer;
+        transition: background .15s, transform .1s;
+        font-family: inherit; margin-top: 10px;
+    }
+    .btn:hover { background: var(--blue-dark); }
+    .btn:active { transform: scale(.97); }
+
+    .feedback {
+        margin-top: 12px; padding: 10px 14px; border-radius: 8px;
+        font-size: 13.5px; font-weight: 500; display: none;
+        animation: fadeIn .3s ease;
+    }
+    .feedback.show { display: block; }
+    .feedback.ok { background: var(--green-soft); color: #14532d; border-left: 3px solid var(--green); }
+    .feedback.bad { background: var(--red-soft); color: #7f1d1d; border-left: 3px solid var(--red); }
+    .feedback.hint { background: var(--amber-soft); color: #78350f; border-left: 3px solid var(--amber); }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .final-card {
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        color: #fff; border-radius: 16px; padding: 32px 36px;
+        text-align: center; box-shadow: 0 10px 30px rgba(59,130,246,.25);
+        display: none; margin-bottom: 24px;
+    }
+    .final-card.show { display: block; animation: fadeIn .4s ease; }
+    .final-card h2 { color: #fff; font-size: 22px; margin-bottom: 10px; }
+    .final-score { font-size: 42px; font-weight: 800; letter-spacing: -1px; margin: 12px 0; }
+    .final-msg { font-size: 15px; opacity: .92; max-width: 500px; margin: 0 auto; }
+
+    .intro-note {
+        background: #eff6ff; border-left: 4px solid var(--blue);
+        border-radius: 0 10px 10px 0; padding: 14px 20px;
+        margin-bottom: 20px; font-size: 14px; color: #1e3a8a;
+    }
+    .question-progress {
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 18px; padding: 12px 16px;
+        background: #f8fafc; border-radius: 10px;
+        border: 1px solid var(--line); font-size: 13px; color: var(--muted);
+    }
+    .question-progress .bar-mini {
+        flex: 1; height: 6px; background: #e2e8f0;
+        border-radius: 99px; overflow: hidden;
+    }
+    .question-progress .bar-mini-fill {
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, #34d399, #10b981);
+        transition: width .3s ease;
+    }
+
+    @media (max-width: 720px) {
+        .pillars { grid-template-columns: 1fr; }
+        .threats { grid-template-columns: 1fr; }
+        header, section { padding: 22px 20px; }
+        h1 { font-size: 22px; }
+        .match-row .left { min-width: 100%; }
+        select { min-width: 100%; }
+        .tab { font-size: 12px; padding: 10px 8px; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+
+    <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-label">
+            <span id="progressLabel">Разбор с учителем</span>
+            <span id="progressText">0 / 12</span>
+        </div>
+    </div>
+
+    <header>
+        <div class="eyebrow">Модуль 0 · Занятие 1</div>
+        <h1>Что такое информационная безопасность?</h1>
+        <p class="lead">Разберёмся, что защищает ИБ, какие бывают угрозы и как злоумышленники действуют по шагам. Сначала разбор с учителем, потом — самостоятельная проверка.</p>
+    </header>
+
+    <div class="tabs" role="tablist">
+        <button class="tab active" role="tab" data-tab="lesson" onclick="switchTab('lesson')">
+            <span>Разбор с учителем</span>
+            <span class="tab-badge" id="badgeLesson">0/12</span>
+        </button>
+        <button class="tab" role="tab" data-tab="selfcheck" onclick="switchTab('selfcheck')">
+            <span>Проверь себя</span>
+            <span class="tab-badge" id="badgeSelf">0/15</span>
+        </button>
+    </div>
+
+    <!-- ============ LESSON TAB ============ -->
+    <div class="tab-panel active" id="panel-lesson">
+
+        <!-- PROPERTIES -->
+        <section>
+            <h2>Три свойства информации</h2>
+            <p class="section-sub">ИБ защищает информацию по трём направлениям. Это основа всего курса.</p>
+
+            <div class="pillars">
+                <div class="pillar">
+                    <svg viewBox="0 0 64 64" fill="none">
+                        <rect x="14" y="26" width="36" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                        <path d="M22 26V18a10 10 0 0 1 20 0v8" stroke="#3b82f6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                        <circle cx="32" cy="40" r="3" fill="#3b82f6"/>
+                        <rect x="30.5" y="40" width="3" height="7" rx="1.5" fill="#3b82f6"/>
+                    </svg>
+                    <div class="title">Конфиденциальность</div>
+                    <div class="desc">
+                        Только свои видят данные.
+                        <ul>
+                            <li>пароль от почты</li>
+                            <li>личные сообщения</li>
+                            <li>медкарта, оценки</li>
+                            <li>данные банковской карты</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="pillar">
+                    <svg viewBox="0 0 64 64" fill="none">
+                        <path d="M32 8l22 8v14c0 14-9 22-22 26-13-4-22-12-22-26V16l22-8z" fill="#dcfce7" stroke="#16a34a" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M22 32l7 7 14-14" stroke="#16a34a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <div class="title">Целостность</div>
+                    <div class="desc">
+                        Данные не изменены.
+                        <ul>
+                            <li>оценки в журнале</li>
+                            <li>баланс карты</li>
+                            <li>текст документа</li>
+                            <li>конфигурация системы</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="pillar">
+                    <svg viewBox="0 0 64 64" fill="none">
+                        <rect x="10" y="18" width="44" height="12" rx="2" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+                        <rect x="10" y="34" width="44" height="12" rx="2" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+                        <circle cx="18" cy="24" r="2" fill="#d97706"/>
+                        <circle cx="18" cy="40" r="2" fill="#d97706"/>
+                    </svg>
+                    <div class="title">Доступность</div>
+                    <div class="desc">
+                        Данные доступны, когда нужны.
+                        <ul>
+                            <li>сайт и приложение</li>
+                            <li>сервер и база данных</li>
+                            <li>интернет-магазин</li>
+                            <li>онлайн-банк</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- THREATS -->
+        <section>
+            <h2>Виды угроз</h2>
+            <p class="section-sub">Шесть основных типов угроз. У каждой — пример, чтобы запомнить.</p>
+
+            <div class="threats">
+                <div class="threat">
+                    <div class="threat-head">
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <rect x="4" y="8" width="24" height="16" rx="2" stroke="#dc2626" stroke-width="2"/>
+                            <path d="M4 12l12 8 12-8" stroke="#dc2626" stroke-width="2" fill="none"/>
+                        </svg>
+                        <div>
+                            <div class="th-title">Фишинг</div>
+                            <div class="th-desc">Поддельные письма, сайты и СМС. Мошенники выманивают пароли и данные карт.</div>
+                        </div>
+                    </div>
+                    <div class="th-example">
+                        <strong>Пример:</strong> письмо «Ваш аккаунт заблокирован! Перейдите по ссылке и подтвердите пароль».
+                    </div>
+                </div>
+
+                <div class="threat">
+                    <div class="threat-head">
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <circle cx="16" cy="16" r="10" stroke="#7c3aed" stroke-width="2"/>
+                            <circle cx="13" cy="13" r="1.5" fill="#7c3aed"/>
+                            <circle cx="19" cy="13" r="1.5" fill="#7c3aed"/>
+                            <path d="M11 20c2 2 8 2 10 0" stroke="#7c3aed" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        </svg>
+                        <div>
+                            <div class="th-title">Вредоносные программы</div>
+                            <div class="th-desc">Вирусы, трояны, черви, шифровальщики. Порча, кража или шифрование данных.</div>
+                        </div>
+                    </div>
+                    <div class="th-example">
+                        <strong>Пример:</strong> после запуска файла все документы зашифровались, а на экране — требование выкупа.
+                    </div>
+                </div>
+
+                <div class="threat">
+                    <div class="threat-head">
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <path d="M16 4l10 4v8c0 7-4 11-10 14-6-3-10-7-10-14V8l10-4z" stroke="#dc2626" stroke-width="2" fill="none" stroke-linejoin="round"/>
+                            <path d="M12 16h8M16 12v8" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <div>
+                            <div class="th-title">Шантаж и вымогательство</div>
+                            <div class="th-desc">Угрожают опубликовать фото, видео или данные, если не заплатить.</div>
+                        </div>
+                    </div>
+                    <div class="th-example">
+                        <strong>Пример:</strong> «У меня есть твои личные фото. Переведи 5000 ₽, иначе выложу в сеть».
+                    </div>
+                </div>
+
+                <div class="threat">
+                    <div class="threat-head">
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <rect x="8" y="6" width="16" height="22" rx="2" stroke="#0891b2" stroke-width="2"/>
+                            <rect x="13" y="22" width="6" height="2" rx="1" fill="#0891b2"/>
+                            <circle cx="16" cy="4" r="2" stroke="#0891b2" stroke-width="2" fill="none"/>
+                        </svg>
+                        <div>
+                            <div class="th-title">Социальная инженерия</div>
+                            <div class="th-desc">Обман напрямую: звонки, переписка. Человека уговаривают выдать секрет.</div>
+                        </div>
+                    </div>
+                    <div class="th-example">
+                        <strong>Пример:</strong> «Здравствуйте, я из службы безопасности банка. Назовите код из СМС для отмены перевода».
+                    </div>
+                </div>
+
+                <div class="threat">
+                    <div class="threat-head">
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <rect x="4" y="10" width="20" height="14" rx="2" stroke="#ea580c" stroke-width="2"/>
+                            <path d="M8 10V8a4 4 0 0 1 8 0v2" stroke="#ea580c" stroke-width="2" fill="none"/>
+                            <path d="M26 8l4 16M26 24l4-16" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                        <div>
+                            <div class="th-title">DDoS-атаки</div>
+                            <div class="th-desc">Сайт «забивают» запросами, и он перестаёт работать для всех.</div>
+                        </div>
+                    </div>
+                    <div class="th-example">
+                        <strong>Пример:</strong> интернет-магазин не открывается в день распродажи — сервер не справляется с потоком.
+                    </div>
+                </div>
+
+                <div class="threat">
+                    <div class="threat-head">
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <rect x="5" y="6" width="14" height="18" rx="1" stroke="#0891b2" stroke-width="2"/>
+                            <rect x="13" y="10" width="14" height="18" rx="1" stroke="#0891b2" stroke-width="2" fill="#fff"/>
+                            <path d="M17 16h6M17 20h6" stroke="#0891b2" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <div>
+                            <div class="th-title">Подмена и порча данных</div>
+                            <div class="th-desc">Изменение документов, оценок, баланса. Часто следствие взлома.</div>
+                        </div>
+                    </div>
+                    <div class="th-example">
+                        <strong>Пример:</strong> хакер изменил оценки в электронном журнале или перевёл деньги с чужого счёта.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STAGES -->
+        <section>
+            <h2>Этапы реализации угроз</h2>
+            <p class="section-sub">Как обычно действует злоумышленник — от подготовки до удара. Запомни порядок.</p>
+
+            <div class="stages">
+                <div class="stage">
+                    <div class="stage-num">1</div>
+                    <div class="stage-body">
+                        <div class="stage-title">Разведка</div>
+                        <div class="stage-text">Сбор информации о жертве: соцсети, сайт компании, email сотрудников.</div>
+                        <div class="stage-example">Пример: хакер изучил профиль сотрудника в соцсети и узнал его рабочий email.</div>
+                    </div>
+                </div>
+                <div class="stage">
+                    <div class="stage-num">2</div>
+                    <div class="stage-body">
+                        <div class="stage-title">Первоначальный доступ</div>
+                        <div class="stage-text">Проникновение в систему: фишинговое письмо, подбор пароля, эксплойт.</div>
+                        <div class="stage-example">Пример: сотрудник перешёл по ссылке из письма и ввёл пароль на поддельном сайте.</div>
+                    </div>
+                </div>
+                <div class="stage">
+                    <div class="stage-num">3</div>
+                    <div class="stage-body">
+                        <div class="stage-title">Закрепление</div>
+                        <div class="stage-text">Создание условий для повторного входа: новая учётка, backdoor, смена пароля.</div>
+                        <div class="stage-example">Пример: хакер создал скрытую учётную запись администратора.</div>
+                    </div>
+                </div>
+                <div class="stage">
+                    <div class="stage-num">4</div>
+                    <div class="stage-body">
+                        <div class="stage-title">Вывод данных</div>
+                        <div class="stage-text">Кража и передача данных на сервер злоумышленника.</div>
+                        <div class="stage-example">Пример: троян собрал пароли и отправил их на внешний сервер.</div>
+                    </div>
+                </div>
+                <div class="stage">
+                    <div class="stage-num">5</div>
+                    <div class="stage-body">
+                        <div class="stage-title">Сокрытие атаки</div>
+                        <div class="stage-text">Маскировка следов: удаление логов, подмена системных процессов.</div>
+                        <div class="stage-example">Пример: хакер очистил журналы системы, чтобы никто не заметил взлом.</div>
+                    </div>
+                </div>
+                <div class="stage">
+                    <div class="stage-num">6</div>
+                    <div class="stage-body">
+                        <div class="stage-title">Вредоносное воздействие</div>
+                        <div class="stage-text">Реализация цели: шифрование, удаление, DDoS, deface сайта.</div>
+                        <div class="stage-example">Пример: шифровальщик зашифровал все файлы компании и потребовал выкуп.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXAMPLES -->
+        <section>
+            <h2>Разбор примеров</h2>
+            <p class="section-sub">Как рассуждать, определяя нарушенное свойство.</p>
+
+            <div class="example">
+                <div class="label">Пример 1</div>
+                <div class="body">Вова узнал пароль от почты Пети и прочитал его письма. → Нарушена <strong>конфиденциальность</strong>: посторонний получил доступ к личной информации.</div>
+            </div>
+            <div class="example">
+                <div class="label">Пример 2</div>
+                <div class="body">Кто-то исправил оценки в электронном журнале. → Нарушена <strong>целостность</strong>: данные изменены без разрешения.</div>
+            </div>
+            <div class="example">
+                <div class="label">Пример 3</div>
+                <div class="body">Сайт госуслуг не работает из-за атаки. → Нарушена <strong>доступность</strong>: данные есть, но получить их нельзя.</div>
+            </div>
+        </section>
+
+        <!-- PRACTICE -->
+        <section>
+            <h2>Практика вместе с учителем</h2>
+            <p class="section-sub">12 заданий. Разбираем вместе, проговариваем вслух.</p>
+
+            <!-- 1 -->
+            <div class="task" data-task="1" data-group="lesson">
+                <div class="task-head"><div class="task-num">1</div><div class="task-title">Маша потеряла телефон с открытыми паролями. Какое свойство ИБ под угрозой?</div></div>
+                <div class="options" data-type="radio" data-correct="conf">
+                    <label><input type="radio" name="q1" value="conf"> Конфиденциальность</label>
+                    <label><input type="radio" name="q1" value="integ"> Целостность</label>
+                    <label><input type="radio" name="q1" value="access"> Доступность</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 2 -->
+            <div class="task" data-task="2" data-group="lesson">
+                <div class="task-head"><div class="task-num">2</div><div class="task-title">В игре кто-то поменял количество монет у игрока. Что нарушено?</div></div>
+                <div class="options" data-type="radio" data-correct="integ">
+                    <label><input type="radio" name="q2" value="conf"> Конфиденциальность</label>
+                    <label><input type="radio" name="q2" value="integ"> Целостность</label>
+                    <label><input type="radio" name="q2" value="access"> Доступность</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 3 -->
+            <div class="task" data-task="3" data-group="lesson">
+                <div class="task-head"><div class="task-num">3</div><div class="task-title">Из-за DDoS-атаки нельзя зайти на сервер. Что нарушено?</div></div>
+                <div class="options" data-type="radio" data-correct="access">
+                    <label><input type="radio" name="q3" value="conf"> Конфиденциальность</label>
+                    <label><input type="radio" name="q3" value="integ"> Целостность</label>
+                    <label><input type="radio" name="q3" value="access"> Доступность</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 4 -->
+            <div class="task" data-task="4" data-group="lesson">
+                <div class="task-head"><div class="task-num">4</div><div class="task-title">Хакер прочитал переписку в чужом мессенджере. Какое свойство нарушено?</div></div>
+                <div class="options" data-type="radio" data-correct="conf">
+                    <label><input type="radio" name="q4" value="conf"> Конфиденциальность</label>
+                    <label><input type="radio" name="q4" value="integ"> Целостность</label>
+                    <label><input type="radio" name="q4" value="access"> Доступность</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 5 -->
+            <div class="task" data-task="5" data-group="lesson">
+                <div class="task-head"><div class="task-num">5</div><div class="task-title">Вирус заменил текст в школьном сочинении на бессмыслицу. Что нарушено?</div></div>
+                <div class="options" data-type="radio" data-correct="integ">
+                    <label><input type="radio" name="q5" value="conf"> Конфиденциальность</label>
+                    <label><input type="radio" name="q5" value="integ"> Целостность</label>
+                    <label><input type="radio" name="q5" value="access"> Доступность</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 6 -->
+            <div class="task" data-task="6" data-group="lesson">
+                <div class="task-head"><div class="task-num">6</div><div class="task-title">Какие признаки характерны для фишингового письма? (выберите все верные)</div></div>
+                <div class="options" data-type="checkbox" data-correct='["a","b","c","d"]'>
+                    <label><input type="checkbox" name="q6" value="a"> Странный адрес отправителя</label>
+                    <label><input type="checkbox" name="q6" value="b"> Срочность («Немедленно!»)</label>
+                    <label><input type="checkbox" name="q6" value="c"> Просьба перейти по ссылке и ввести данные</label>
+                    <label><input type="checkbox" name="q6" value="d"> Обещание крупного приза</label>
+                    <label><input type="checkbox" name="q6" value="e"> Хорошо знакомый адрес отправителя</label>
+                    <label><input type="checkbox" name="q6" value="f"> Письмо без ссылок и вложений</label>
+                </div>
+                <button class="btn" onclick="checkCheckbox(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 7 -->
+            <div class="task" data-task="7" data-group="lesson">
+                <div class="task-head"><div class="task-num">7</div><div class="task-title">Какие признаки указывают на вредоносное ПО? (выберите все)</div></div>
+                <div class="options" data-type="checkbox" data-correct='["a","b","c"]'>
+                    <label><input type="checkbox" name="q7" value="a"> Файл шифрует документы и требует выкуп</label>
+                    <label><input type="checkbox" name="q7" value="b"> Программа сама рассылает себя по контактам</label>
+                    <label><input type="checkbox" name="q7" value="c"> Файл скрытно передаёт данные на чужой сервер</label>
+                    <label><input type="checkbox" name="q7" value="d"> Приложение показывает прогноз погоды</label>
+                    <label><input type="checkbox" name="q7" value="e"> Игра сохраняет ваш прогресс</label>
+                </div>
+                <button class="btn" onclick="checkCheckbox(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 8: matching shuffled -->
+            <div class="task" data-task="8" data-group="lesson">
+                <div class="task-head"><div class="task-num">8</div><div class="task-title">Соотнеси событие и этап атаки. Порядок специально перемешан.</div></div>
+                <div data-type="match" data-correct='{"m1":"3","m2":"1","m3":"4","m4":"2"}'>
+                    <div class="match-row">
+                        <div class="left">Создание новой учётной записи администратора</div>
+                        <select id="m1">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Разведка</option>
+                            <option value="2">2. Первоначальный доступ</option>
+                            <option value="3">3. Закрепление</option>
+                            <option value="4">4. Вывод данных</option>
+                            <option value="5">5. Сокрытие атаки</option>
+                            <option value="6">6. Вредоносное воздействие</option>
+                        </select>
+                    </div>
+                    <div class="match-row">
+                        <div class="left">Изучение страницы сотрудника в соцсети</div>
+                        <select id="m2">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Разведка</option>
+                            <option value="2">2. Первоначальный доступ</option>
+                            <option value="3">3. Закрепление</option>
+                            <option value="4">4. Вывод данных</option>
+                            <option value="5">5. Сокрытие атаки</option>
+                            <option value="6">6. Вредоносное воздействие</option>
+                        </select>
+                    </div>
+                    <div class="match-row">
+                        <div class="left">Передача похищенных паролей на сервер злоумышленника</div>
+                        <select id="m3">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Разведка</option>
+                            <option value="2">2. Первоначальный доступ</option>
+                            <option value="3">3. Закрепление</option>
+                            <option value="4">4. Вывод данных</option>
+                            <option value="5">5. Сокрытие атаки</option>
+                            <option value="6">6. Вредоносное воздействие</option>
+                        </select>
+                    </div>
+                    <div class="match-row">
+                        <div class="left">Взлом пароля учётной записи</div>
+                        <select id="m4">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Разведка</option>
+                            <option value="2">2. Первоначальный доступ</option>
+                            <option value="3">3. Закрепление</option>
+                            <option value="4">4. Вывод данных</option>
+                            <option value="5">5. Сокрытие атаки</option>
+                            <option value="6">6. Вредоносное воздействие</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn" onclick="checkMatch(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 9: matching shuffled -->
+            <div class="task" data-task="9" data-group="lesson">
+                <div class="task-head"><div class="task-num">9</div><div class="task-title">Ещё одно соответствие. Порядок перемешан.</div></div>
+                <div data-type="match" data-correct='{"n1":"1","n2":"6","n3":"5"}'>
+                    <div class="match-row">
+                        <div class="left">Хакер изучил открытые порты на сервере компании</div>
+                        <select id="n1">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Разведка</option>
+                            <option value="2">2. Первоначальный доступ</option>
+                            <option value="3">3. Закрепление</option>
+                            <option value="4">4. Вывод данных</option>
+                            <option value="5">5. Сокрытие атаки</option>
+                            <option value="6">6. Вредоносное воздействие</option>
+                        </select>
+                    </div>
+                    <div class="match-row">
+                        <div class="left">Шифровальщик зашифровал все файлы компании</div>
+                        <select id="n2">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Разведка</option>
+                            <option value="2">2. Первоначальный доступ</option>
+                            <option value="3">3. Закрепление</option>
+                            <option value="4">4. Вывод данных</option>
+                            <option value="5">5. Сокрытие атаки</option>
+                            <option value="6">6. Вредоносное воздействие</option>
+                        </select>
+                    </div>
+                    <div class="match-row">
+                        <div class="left">Хакер удалил логи, чтобы замести следы</div>
+                        <select id="n3">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Разведка</option>
+                            <option value="2">2. Первоначальный доступ</option>
+                            <option value="3">3. Закрепление</option>
+                            <option value="4">4. Вывод данных</option>
+                            <option value="5">5. Сокрытие атаки</option>
+                            <option value="6">6. Вредоносное воздействие</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn" onclick="checkMatch(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 10 -->
+            <div class="task" data-task="10" data-group="lesson">
+                <div class="task-head"><div class="task-num">10</div><div class="task-title">Впиши пропущенное слово.</div></div>
+                <p style="font-size:14px;color:#334155;">Свойство ИБ, при котором данные не изменены и не подделаны, называется <input type="text" id="t10" placeholder="введите слово" style="display:inline-block;width:180px;margin:0 6px;">.</p>
+                <div data-type="text" data-correct="целостность" data-target="t10"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 11 -->
+            <div class="task" data-task="11" data-group="lesson">
+                <div class="task-head"><div class="task-num">11</div><div class="task-title">Впиши название этапа атаки.</div></div>
+                <p style="font-size:14px;color:#334155;">Этап, на котором злоумышленник собирает информацию о жертве, называется <input type="text" id="t11" placeholder="введите слово" style="display:inline-block;width:180px;margin:0 6px;">.</p>
+                <div data-type="text" data-correct="разведка" data-target="t11"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 12: reformulated -->
+            <div class="task" data-task="12" data-group="lesson">
+                <div class="task-head"><div class="task-num">12</div><div class="task-title">Определи тип угрозы.</div></div>
+                <div class="options" data-type="radio" data-correct="phish">
+                    <p style="font-size:14px;color:#334155;margin-bottom:12px;">
+                        Пете на почту пришло письмо от неизвестного адреса: «<strong>Ваш аккаунт будет удалён через 24 часа!</strong> Срочно перейдите по ссылке ниже и введите свой логин и пароль, чтобы подтвердить аккаунт».
+                    </p>
+                    <label><input type="radio" name="q12" value="phish"> Фишинг</label>
+                    <label><input type="radio" name="q12" value="virus"> Вредоносная программа</label>
+                    <label><input type="radio" name="q12" value="black"> Шантаж / вымогательство</label>
+                    <label><input type="radio" name="q12" value="ddos"> DDoS-атака</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="final-card" id="finalCardLesson">
+                <h2>Разбор завершён</h2>
+                <div class="final-score" id="finalScoreLesson">0 / 12</div>
+                <div class="final-msg">Отлично! Теперь переходи на вкладку «Проверь себя» — там 15 заданий для самостоятельной работы.</div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============ SELF TAB ============ -->
+    <div class="tab-panel" id="panel-selfcheck">
+        <section>
+            <h2>Проверь себя</h2>
+            <p class="section-sub">15 заданий. Работай самостоятельно. В конце — итоговая оценка.</p>
+
+            <div class="intro-note">
+                Прочитай задание, выбери или впиши ответ и нажми «Проверить». Если ошибся — попробуй ещё раз, пока не получится верно.
+            </div>
+
+            <div class="question-progress">
+                <span>Решено:</span>
+                <div class="bar-mini"><div class="bar-mini-fill" id="selfBar"></div></div>
+                <span id="selfCount">0 / 15</span>
+            </div>
+
+            <!-- 1 -->
+            <div class="task" data-task="101" data-group="self">
+                <div class="task-head"><div class="task-num">1</div><div class="task-title">Хакер получил доступ к базе данных и скопировал себе список клиентов. Какое свойство нарушено?</div></div>
+                <div class="options" data-type="radio" data-correct="conf">
+                    <label><input type="radio" name="s1" value="conf"> Конфиденциальность</label>
+                    <label><input type="radio" name="s1" value="integ"> Целостность</label>
+                    <label><input type="radio" name="s1" value="access"> Доступность</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 2 -->
+            <div class="task" data-task="102" data-group="self">
+                <div class="task-head"><div class="task-num">2</div><div class="task-title">Ученик случайно удалил важный файл учителя. Какое свойство нарушено?</div></div>
+                <div class="options" data-type="radio" data-correct="integ">
+                    <label><input type="radio" name="s2" value="conf"> Конфиденциальность</label>
+                    <label><input type="radio" name="s2" value="integ"> Целостность</label>
+                    <label><input type="radio" name="s2" value="access"> Доступность</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 3 -->
+            <div class="task" data-task="103" data-group="self">
+                <div class="task-head"><div class="task-num">3</div><div class="task-title">Сайт онлайн-кинотеатра лежит из-за перегрузки — фильмы не посмотреть. Что нарушено?</div></div>
+                <div class="options" data-type="radio" data-correct="access">
+                    <label><input type="radio" name="s3" value="conf"> Конфиденциальность</label>
+                    <label><input type="radio" name="s3" value="integ"> Целостность</label>
+                    <label><input type="radio" name="s3" value="access"> Доступность</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 4 -->
+            <div class="task" data-task="104" data-group="self">
+                <div class="task-head"><div class="task-num">4</div><div class="task-title">В мессенджер пришло сообщение: «Я взломал твой телефон. У меня есть твои фото. Переведи 5000 рублей, иначе всё выложу». Что это?</div></div>
+                <div class="options" data-type="radio" data-correct="black">
+                    <label><input type="radio" name="s4" value="phish"> Фишинг</label>
+                    <label><input type="radio" name="s4" value="virus"> Вредоносная программа</label>
+                    <label><input type="radio" name="s4" value="black"> Шантаж / вымогательство</label>
+                    <label><input type="radio" name="s4" value="social"> Социальная инженерия</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 5 -->
+            <div class="task" data-task="105" data-group="self">
+                <div class="task-head"><div class="task-num">5</div><div class="task-title">Какие признаки характерны для шантажа? (выберите все)</div></div>
+                <div class="options" data-type="checkbox" data-correct='["a","b","c"]'>
+                    <label><input type="checkbox" name="s5" value="a"> Угроза опубликовать личные данные</label>
+                    <label><input type="checkbox" name="s5" value="b"> Требование денег</label>
+                    <label><input type="checkbox" name="s5" value="c"> Ссылка на личные фото/видео как доказательство</label>
+                    <label><input type="checkbox" name="s5" value="d"> Реклама скидки на товар</label>
+                    <label><input type="checkbox" name="s5" value="e"> Просьба проголосовать за друга</label>
+                </div>
+                <button class="btn" onclick="checkCheckbox(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 6 -->
+            <div class="task" data-task="106" data-group="self">
+                <div class="task-head"><div class="task-num">6</div><div class="task-title">Впиши название свойства ИБ.</div></div>
+                <p style="font-size:14px;color:#334155;">Свойство, при котором информация доступна только тем, кому она предназначена, называется <input type="text" id="ts1" placeholder="слово" style="display:inline-block;width:200px;margin:0 6px;">.</p>
+                <div data-type="text" data-correct="конфиденциальность" data-target="ts1"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 7 -->
+            <div class="task" data-task="107" data-group="self">
+                <div class="task-head"><div class="task-num">7</div><div class="task-title">Впиши название этапа атаки.</div></div>
+                <p style="font-size:14px;color:#334155;">Этап, на котором злоумышленник маскирует свои действия, называется <input type="text" id="ts2" placeholder="слово" style="display:inline-block;width:200px;margin:0 6px;">.</p>
+                <div data-type="text" data-correct="сокрытие" data-target="ts2"></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 8: matching shuffled -->
+            <div class="task" data-task="108" data-group="self">
+                <div class="task-head"><div class="task-num">8</div><div class="task-title">Соотнеси пример и свойство информации. Порядок перемешан.</div></div>
+                <div data-type="match" data-correct='{"sp1":"3","sp2":"1","sp3":"2"}'>
+                    <div class="match-row">
+                        <div class="left">Сервер не отвечает, сайт недоступен</div>
+                        <select id="sp1">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Конфиденциальность</option>
+                            <option value="2">2. Целостность</option>
+                            <option value="3">3. Доступность</option>
+                        </select>
+                    </div>
+                    <div class="match-row">
+                        <div class="left">Посторонний прочитал личные сообщения</div>
+                        <select id="sp2">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Конфиденциальность</option>
+                            <option value="2">2. Целостность</option>
+                            <option value="3">3. Доступность</option>
+                        </select>
+                    </div>
+                    <div class="match-row">
+                        <div class="left">В документе изменили одну цифру</div>
+                        <select id="sp3">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Конфиденциальность</option>
+                            <option value="2">2. Целостность</option>
+                            <option value="3">3. Доступность</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn" onclick="checkMatch(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 9 -->
+            <div class="task" data-task="109" data-group="self">
+                <div class="task-head"><div class="task-num">9</div><div class="task-title">Что делать, если получил фишинговое письмо?</div></div>
+                <div class="options" data-type="radio" data-correct="no_click">
+                    <label><input type="radio" name="s9" value="click"> Перейти по ссылке и проверить</label>
+                    <label><input type="radio" name="s9" value="no_click"> Не переходить по ссылке, отметить как спам</label>
+                    <label><input type="radio" name="s9" value="reply"> Ответить и спросить отправителя</label>
+                    <label><input type="radio" name="s9" value="share"> Переслать друзьям, чтобы посмеяться</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 10 -->
+            <div class="task" data-task="110" data-group="self">
+                <div class="task-head"><div class="task-num">10</div><div class="task-title">Какие действия безопасны в интернете? (выберите все)</div></div>
+                <div class="options" data-type="checkbox" data-correct='["a","b","d"]'>
+                    <label><input type="checkbox" name="s10" value="a"> Использовать сложные пароли</label>
+                    <label><input type="checkbox" name="s10" value="b"> Проверять адрес отправителя письма</label>
+                    <label><input type="checkbox" name="s10" value="c"> Переходить по ссылкам из подозрительных писем</label>
+                    <label><input type="checkbox" name="s10" value="d"> Обновлять операционную систему</label>
+                    <label><input type="checkbox" name="s10" value="e"> Отключать антивирус для скорости</label>
+                </div>
+                <button class="btn" onclick="checkCheckbox(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 11 -->
+            <div class="task" data-task="111" data-group="self">
+                <div class="task-head"><div class="task-num">11</div><div class="task-title">Определи этап атаки.</div></div>
+                <div class="options" data-type="radio" data-correct="recon">
+                    <p style="font-size:14px;color:#334155;margin-bottom:12px;">Хакер открыл профиль сотрудника компании в соцсети и изучил, где тот работает и какие у него увлечения.</p>
+                    <label><input type="radio" name="s11" value="recon"> Разведка</label>
+                    <label><input type="radio" name="s11" value="access"> Первоначальный доступ</label>
+                    <label><input type="radio" name="s11" value="fix"> Закрепление</label>
+                    <label><input type="radio" name="s11" value="data"> Вывод данных</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 12: matching shuffled -->
+            <div class="task" data-task="112" data-group="self">
+                <div class="task-head"><div class="task-num">12</div><div class="task-title">Соотнеси ситуацию и тип угрозы. Порядок перемешан.</div></div>
+                <div data-type="match" data-correct='{"tp1":"3","tp2":"1","tp3":"2"}'>
+                    <div class="match-row">
+                        <div class="left">Пришло сообщение с угрозой опубликовать личные фото</div>
+                        <select id="tp1">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Фишинг</option>
+                            <option value="2">2. Вредоносное ПО</option>
+                            <option value="3">3. Шантаж</option>
+                        </select>
+                    </div>
+                    <div class="match-row">
+                        <div class="left">Письмо «Ваш банк заблокирован, перейдите по ссылке и введите карту»</div>
+                        <select id="tp2">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Фишинг</option>
+                            <option value="2">2. Вредоносное ПО</option>
+                            <option value="3">3. Шантаж</option>
+                        </select>
+                    </div>
+                    <div class="match-row">
+                        <div class="left">После запуска файла все документы зашифровались</div>
+                        <select id="tp3">
+                            <option value="">— выберите —</option>
+                            <option value="1">1. Фишинг</option>
+                            <option value="2">2. Вредоносное ПО</option>
+                            <option value="3">3. Шантаж</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn" onclick="checkMatch(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 13 -->
+            <div class="task" data-task="113" data-group="self">
+                <div class="task-head"><div class="task-num">13</div><div class="task-title">Определи этап атаки.</div></div>
+                <div class="options" data-type="radio" data-correct="data">
+                    <p style="font-size:14px;color:#334155;margin-bottom:12px;">Вредоносная программа собрала список паролей с компьютера и отправила его на сервер злоумышленника.</p>
+                    <label><input type="radio" name="s13" value="recon"> Разведка</label>
+                    <label><input type="radio" name="s13" value="access"> Первоначальный доступ</label>
+                    <label><input type="radio" name="s13" value="fix"> Закрепление</label>
+                    <label><input type="radio" name="s13" value="data"> Вывод данных</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 14 -->
+            <div class="task" data-task="114" data-group="self">
+                <div class="task-head"><div class="task-num">14</div><div class="task-title">Впиши название этапа атаки.</div></div>
+                <p style="font-size:14px;color:#334155;">Этап, на котором злоумышленник проникает в систему, называется <input type="text" id="ts3" placeholder="слово или фраза" style="display:inline-block;width:240px;margin:0 6px;">.</p>
+                <div data-type="text" data-correct="первоначальный доступ" data-target="ts3" data-alt='["первоначальный_доступ","первоначальныйдоступ"]'></div>
+                <button class="btn" onclick="checkText(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 15 -->
+            <div class="task" data-task="115" data-group="self">
+                <div class="task-head"><div class="task-num">15</div><div class="task-title">Определи тип угрозы.</div></div>
+                <div class="options" data-type="radio" data-correct="social">
+                    <p style="font-size:14px;color:#334155;margin-bottom:12px;">Незнакомец позвонил бабушке, представился сотрудником банка и уговорил её назвать код из СМС.</p>
+                    <label><input type="radio" name="s15" value="phish"> Фишинг</label>
+                    <label><input type="radio" name="s15" value="virus"> Вредоносная программа</label>
+                    <label><input type="radio" name="s15" value="black"> Шантаж</label>
+                    <label><input type="radio" name="s15" value="social"> Социальная инженерия</label>
+                </div>
+                <button class="btn" onclick="checkRadio(this)">Проверить</button>
+                <div class="feedback"></div>
+            </div>
+
+            <div class="final-card" id="finalCardSelf">
+                <h2>Самостоятельная работа завершена</h2>
+                <div class="final-score" id="finalScoreSelf">0 / 15</div>
+                <div class="final-msg" id="finalMsgSelf"></div>
+            </div>
+        </section>
+    </div>
+
+</div>
+
+<script>
+    const LESSON_TOTAL = 12;
+    const SELF_TOTAL = 15;
+    const solvedLesson = new Set();
+    const solvedSelf = new Set();
+    let activeTab = 'lesson';
+
+    function switchTab(tab) {
+        activeTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+        updateProgress();
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function updateProgress() {
+        if (activeTab === 'lesson') {
+            const n = solvedLesson.size;
+            document.getElementById('progressFill').style.width = (n / LESSON_TOTAL * 100) + '%';
+            document.getElementById('progressText').textContent = n + ' / ' + LESSON_TOTAL;
+            document.getElementById('progressLabel').textContent = 'Разбор с учителем';
+            document.getElementById('badgeLesson').textContent = n + '/' + LESSON_TOTAL;
+            if (n === LESSON_TOTAL) {
+                document.getElementById('finalCardLesson').classList.add('show');
+                document.getElementById('finalScoreLesson').textContent = n + ' / ' + LESSON_TOTAL;
+            }
+        } else {
+            const n = solvedSelf.size;
+            document.getElementById('progressFill').style.width = (n / SELF_TOTAL * 100) + '%';
+            document.getElementById('progressText').textContent = n + ' / ' + SELF_TOTAL;
+            document.getElementById('progressLabel').textContent = 'Проверь себя';
+            document.getElementById('badgeSelf').textContent = n + '/' + SELF_TOTAL;
+            document.getElementById('selfBar').style.width = (n / SELF_TOTAL * 100) + '%';
+            document.getElementById('selfCount').textContent = n + ' / ' + SELF_TOTAL;
+            if (n === SELF_TOTAL) {
+                const card = document.getElementById('finalCardSelf');
+                card.classList.add('show');
+                document.getElementById('finalScoreSelf').textContent = n + ' / ' + SELF_TOTAL;
+                let msg = '';
+                if (n >= 14) msg = 'Отличный результат! Ты отлично разобрался(ась) в основах ИБ.';
+                else if (n >= 12) msg = 'Хороший результат. Обрати внимание на задания, где ошибался(ась).';
+                else msg = 'Есть над чем поработать. Перечитай теорию и попробуй ещё раз.';
+                document.getElementById('finalMsgSelf').textContent = msg;
+                card.scrollIntoView({behavior: 'smooth', block: 'center'});
+            }
+        }
+    }
+
+    function taskOf(btn) { return btn.closest('.task'); }
+    function fb(task) { return task.querySelector('.feedback'); }
+    function groupOf(task) { return task.dataset.group; }
+    function idOf(task) { return parseInt(task.dataset.task, 10); }
+
+    function markSolved(task, ok, message) {
+        const f = fb(task);
+        f.textContent = message;
+        f.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+        task.classList.remove('correct', 'incorrect');
+        task.classList.add(ok ? 'correct' : 'incorrect');
+        if (ok) {
+            const id = idOf(task);
+            if (groupOf(task) === 'lesson') solvedLesson.add(id);
+            else solvedSelf.add(id);
+            updateProgress();
+        }
+    }
+
+    function checkRadio(btn) {
+        const task = taskOf(btn);
+        const wrap = task.querySelector('.options');
+        const correct = wrap.dataset.correct;
+        const checked = wrap.querySelector('input:checked');
+        if (!checked) {
+            const f = fb(task);
+            f.textContent = 'Выбери вариант.';
+            f.className = 'feedback show hint';
+            return;
+        }
+        if (checked.value === correct) markSolved(task, true, 'Верно!');
+        else markSolved(task, false, 'Неверно. Подумай ещё раз.');
+    }
+
+    function checkCheckbox(btn) {
+        const task = taskOf(btn);
+        const wrap = task.querySelector('.options');
+        const correct = JSON.parse(wrap.dataset.correct);
+        const chosen = [...wrap.querySelectorAll('input:checked')].map(i => i.value);
+        if (chosen.length === 0) {
+            const f = fb(task);
+            f.textContent = 'Выбери хотя бы один вариант.';
+            f.className = 'feedback show hint';
+            return;
+        }
+        const isCorrect = correct.length === chosen.length && correct.every(v => chosen.includes(v));
+        if (isCorrect) markSolved(task, true, 'Верно!');
+        else markSolved(task, false, 'Не совсем. Перечитай теорию и попробуй снова.');
+    }
+
+    function checkMatch(btn) {
+        const task = taskOf(btn);
+        const wrap = task.querySelector('[data-type="match"]');
+        const correct = JSON.parse(wrap.dataset.correct);
+        let allFilled = true, allCorrect = true;
+        for (const id in correct) {
+            const el = document.getElementById(id);
+            if (!el.value) allFilled = false;
+            if (el.value !== correct[id]) allCorrect = false;
+        }
+        if (!allFilled) {
+            const f = fb(task);
+            f.textContent = 'Заполни все поля.';
+            f.className = 'feedback show hint';
+            return;
+        }
+        if (allCorrect) markSolved(task, true, 'Верно!');
+        else markSolved(task, false, 'Есть ошибки. Попробуй ещё раз.');
+    }
+
+    function normalize(s) {
+        return (s || '').trim().toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ');
+    }
+
+    function checkText(btn) {
+        const task = taskOf(btn);
+        const data = task.querySelector('[data-type="text"]');
+        const input = document.getElementById(data.dataset.target);
+        const val = normalize(input.value);
+        const correct = normalize(data.dataset.correct);
+        let alts = [];
+        try { alts = JSON.parse(data.dataset.alt || '[]').map(normalize); } catch(e) {}
+        if (!val) {
+            const f = fb(task);
+            f.textContent = 'Впиши ответ.';
+            f.className = 'feedback show hint';
+            return;
+        }
+        if (val === correct || alts.includes(val)) markSolved(task, true, 'Верно!');
+        else markSolved(task, false, 'Неверно. Попробуй ещё раз.');
+    }
+
+    document.querySelectorAll('.options input').forEach(inp => {
+        inp.addEventListener('change', () => {
+            const name = inp.name;
+            if (!name) return;
+            document.querySelectorAll(`input[name="${name}"]`).forEach(i => {
+                i.closest('label').classList.toggle('selected', i.checked);
+            });
+        });
+    });
+
+    updateProgress();
+</script>
+</body>
+</html>
