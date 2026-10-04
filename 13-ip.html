@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IP-адресация · Задание 10 ЕГЭ</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #0f172a; min-height: 100vh; }
+header { background: #0f172a; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.brand { font-weight: 700; font-size: 16px; }
+nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.tab { background: transparent; color: #cbd5e1; border: 1px solid #334155; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit; transition: all .15s; }
+.tab:hover { background: #1e293b; color: #fff; }
+.tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.slide { display: none; animation: fade .25s; }
+.slide.active { display: block; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.slide-card { background: #fff; border-radius: 16px; padding: 28px 36px; box-shadow: 0 4px 20px rgba(15,23,42,.06); min-height: 560px; display: flex; flex-direction: column; }
+.slide h2 { margin: 0 0 16px; font-size: 27px; color: #0f172a; font-weight: 800; text-align: center; }
+.slide p { font-size: 17px; line-height: 1.5; color: #334155; margin: 6px 0; text-align: center; }
+.slide ul, .slide ol { font-size: 17px; line-height: 1.6; color: #334155; }
+.slide code { background: #f1f5f9; padding: 3px 8px; border-radius: 5px; font-family: monospace; font-size: 16px; color: #be123c; }
+.slide-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+.controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; gap: 12px; }
+.controls button { background: #2563eb; color: #fff; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-size: 16px; font-family: inherit; font-weight: 600; transition: background .15s; }
+.controls button:hover:not(:disabled) { background: #1d4ed8; }
+.controls button:disabled { background: #cbd5e1; cursor: default; }
+.counter { color: #64748b; font-size: 15px; font-weight: 600; }
+
+.progress { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, #2563eb, #7c3aed); transition: width .3s; width: 0; }
+
+.title-slide { text-align: center; padding: 80px 20px; }
+.title-slide h1 { font-size: 72px; margin: 0 0 20px; background: linear-gradient(135deg, #2563eb, #7c3aed); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; line-height: 1.1; }
+.title-slide .subtitle { font-size: 26px; color: #64748b; }
+.title-slide .hint { margin-top: 60px; color: #94a3b8; font-size: 18px; }
+
+.house-demo { text-align: center; padding: 20px 0; }
+.house-display { font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 130px; font-weight: 900; letter-spacing: 2px; color: #0f172a; display: inline-block; transition: all .4s; min-height: 170px; line-height: 1.2; }
+.house-display .sep { color: #94a3b8; margin: 0 8px; font-weight: 400; }
+.house-display .h { color: #2563eb; }
+.house-display .f { color: #ea580c; }
+.house-labels { display: flex; justify-content: center; gap: 90px; font-size: 20px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: 0; transition: opacity .35s; }
+.house-labels.show { opacity: 1; }
+.house-labels .lbl-h { color: #2563eb; }
+.house-labels .lbl-f { color: #ea580c; }
+.house-toggle { margin-top: 50px; display: inline-flex; align-items: center; gap: 14px; background: #f1f5f9; padding: 14px 26px; border-radius: 100px; cursor: pointer; font-size: 18px; user-select: none; font-weight: 600; color: #334155; transition: background .2s; }
+.house-toggle:hover { background: #e2e8f0; }
+.house-toggle input { display: none; }
+.house-toggle .switch { width: 56px; height: 30px; background: #cbd5e1; border-radius: 100px; position: relative; transition: background .2s; flex-shrink: 0; }
+.house-toggle .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; background: #fff; border-radius: 50%; transition: transform .22s; box-shadow: 0 2px 4px rgba(0,0,0,.15); }
+.house-toggle input:checked + .switch { background: #2563eb; }
+.house-toggle input:checked + .switch::after { transform: translateX(26px); }
+
+.ip-octets { display: flex; justify-content: center; align-items: flex-end; gap: 20px; padding: 30px 0; flex-wrap: wrap; }
+.octet-group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.octet-group .dec { font-size: 42px; font-weight: 800; color: #0f172a; font-family: 'SF Mono', Monaco, Consolas, monospace; }
+.octet-group .arrow { font-size: 22px; color: #94a3b8; line-height: 1; }
+.octet-group .bin { font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 28px; font-weight: 700; color: #2563eb; letter-spacing: 3px; background: #dbeafe; padding: 6px 14px; border-radius: 8px; }
+.octet-sep { font-size: 42px; font-weight: 800; color: #94a3b8; font-family: 'SF Mono', Monaco, Consolas, monospace; padding-bottom: 58px; }
+
+.bit-display { display: flex; justify-content: center; align-items: center; font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 20px; font-weight: 700; margin: 4px 0; }
+.bit-display .bit { display: inline-block; width: 22px; text-align: center; transition: background .25s, color .25s, transform .25s, box-shadow .25s; border-radius: 3px; padding: 3px 0; }
+.bit-display .dot { display: inline-block; width: 12px; text-align: center; color: #94a3b8; }
+.bit.net  { background: #dbeafe; color: #1d4ed8; }
+.bit.host { background: #fed7aa; color: #c2410c; }
+.bit.free { background: #fef9c3; color: #a16207; box-shadow: inset 0 0 0 1px #eab308; }
+.bit.zero { background: #fecaca; color: #7f1d1d; }
+.bit.one  { background: #bbf7d0; color: #166534; }
+.bit.hi-net  { box-shadow: inset 0 0 0 3px #2563eb; }
+.bit.hi-zero { box-shadow: inset 0 0 0 3px #dc2626; }
+.bit.hi-free { box-shadow: inset 0 0 0 3px #eab308; }
+.bit.empty { background: transparent; color: #cbd5e1; }
+.bit.done { opacity: 0.55; }
+.bit.current { animation: pulse 0.9s infinite alternate; transform: scale(1.18); z-index: 2; position: relative; }
+@keyframes pulse { from { box-shadow: 0 0 0 0 rgba(37,99,235,.6); } to { box-shadow: 0 0 0 6px rgba(37,99,235,0); } }
+
+.bit-row-label { display: inline-block; width: 100px; text-align: right; padding-right: 14px; font-weight: 700; color: #475569; font-size: 16px; flex-shrink: 0; }
+.bit-row-wrap { display: flex; align-items: center; margin: 6px 0; justify-content: flex-start; }
+
+.bit-labels { display: flex; justify-content: center; align-items: flex-end; font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 2px; height: 30px; }
+.bit-labels .lbl { text-align: center; border-bottom: 3px solid currentColor; padding-bottom: 4px; transition: width .3s; white-space: nowrap; overflow: hidden; }
+.bit-labels .lbl.net  { color: #2563eb; }
+.bit-labels .lbl.host { color: #ea580c; }
+
+.slider-block { text-align: center; margin: 14px 0; }
+.slider-block label { display: block; font-size: 17px; font-weight: 600; color: #334155; margin-bottom: 8px; }
+.slider-block label strong { color: #2563eb; font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 20px; }
+.slider-block input[type=range] { width: 100%; max-width: 560px; accent-color: #2563eb; height: 6px; }
+
+.interactive { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px 24px; margin: 12px 0; }
+
+.formula-box { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-left: 5px solid #2563eb; padding: 16px 24px; border-radius: 10px; font-size: 24px; margin: 14px auto; color: #1e3a8a; text-align: center; font-weight: 700; max-width: 760px; }
+.formula-box.hidden { display: none; }
+
+.two-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 14px 0; }
+.card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px; text-align: center; }
+.card h3 { margin: 0 0 8px; font-family: 'SF Mono', Monaco, Consolas, monospace; color: #2563eb; font-size: 22px; }
+.card p { font-size: 15px; margin: 6px 0; }
+.card .dec-mini { font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 6px; }
+
+.step-controls { display: flex; justify-content: center; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
+.step-btn { background: #2563eb; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; font-family: inherit; transition: background .15s; }
+.step-btn:hover:not(:disabled) { background: #1d4ed8; }
+.step-btn:disabled { background: #cbd5e1; cursor: default; }
+.step-btn.secondary { background: #e2e8f0; color: #475569; }
+.step-btn.secondary:hover { background: #cbd5e1; }
+.step-caption { text-align: center; font-size: 17px; color: #0f172a; font-weight: 600; min-height: 28px; margin: 10px 0; line-height: 1.4; }
+.step-caption .num { color: #2563eb; font-family: 'SF Mono', Monaco, monospace; font-weight: 800; }
+.step-caption .neg { color: #dc2626; font-weight: 800; }
+.step-caption .pos { color: #16a34a; font-weight: 800; }
+
+.and-block { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 10px 0; }
+.and-decimal { font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: 1px; transition: opacity .3s; }
+.and-decimal.result { color: #16a34a; }
+.and-divider { width: 100%; max-width: 780px; height: 2px; background: #94a3b8; margin: 6px auto 2px; }
+
+.truth { display: flex; justify-content: center; gap: 10px; margin: 8px 0; flex-wrap: wrap; }
+.truth .tcell { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 14px; font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 17px; font-weight: 700; color: #334155; }
+.truth .tcell .res { color: #2563eb; font-size: 19px; }
+
+.combos { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 14px; margin: 10px 0; }
+.combo { font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 17px; font-weight: 700; background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 8px; color: #334155; opacity: 0; transform: translateY(6px); transition: opacity .3s, transform .3s; }
+.combo .mask-dec { color: #2563eb; margin-left: 8px; }
+.combo.show { opacity: 1; transform: none; }
+
+.task { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; display: flex; gap: 16px; }
+.task-num { width: 32px; height: 32px; border-radius: 50%; background: #2563eb; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; font-size: 14px; }
+.task-body { flex: 1; min-width: 0; }
+.task-q { font-size: 16px; line-height: 1.5; margin-bottom: 10px; color: #334155; text-align: left; }
+.task-q code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #be123c; font-size: 14px; }
+.task-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.task-input { flex: 1; min-width: 160px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; font-size: 15px; font-family: monospace; }
+.task-input:focus { outline: 2px solid #2563eb; outline-offset: -1px; border-color: transparent; }
+.check-btn, .hint-btn { border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: inherit; font-weight: 600; transition: background .15s; }
+.check-btn { background: #2563eb; color: #fff; }
+.check-btn:hover { background: #1d4ed8; }
+.hint-btn { background: #f1f5f9; color: #475569; }
+.hint-btn:hover { background: #e2e8f0; }
+.task-feedback { margin-top: 8px; font-weight: 600; font-size: 14px; min-height: 20px; }
+.task-feedback.correct { color: #16a34a; }
+.task-feedback.wrong { color: #dc2626; }
+.task-hint { display: none; margin-top: 8px; padding: 10px 12px; background: #fffbeb; border-left: 3px solid #fbbf24; border-radius: 4px; font-size: 14px; color: #78350f; }
+.task-hint.show { display: block; }
+
+.muted { color: #64748b; font-size: 15px; font-style: italic; text-align: center; }
+.spacer-top { margin-top: 14px; }
+
+@media (max-width: 900px) {
+  .slide-card { padding: 20px 14px; min-height: 500px; }
+  .slide h2 { font-size: 21px; }
+  .slide p, .slide ul, .slide ol { font-size: 14px; }
+  .title-slide h1 { font-size: 40px; }
+  .house-display { font-size: 68px; min-height: 100px; }
+  .octet-group .dec { font-size: 24px; }
+  .octet-group .bin { font-size: 14px; letter-spacing: 1px; }
+  .octet-sep { font-size: 24px; padding-bottom: 32px; }
+  .bit-display { font-size: 10px; }
+  .bit-display .bit { width: 10px; padding: 2px 0; }
+  .bit-display .dot { width: 6px; }
+  .bit-row-label { width: 60px; font-size: 12px; padding-right: 6px; }
+  .formula-box { font-size: 16px; }
+  .two-cards { grid-template-columns: 1fr; }
+  .bit-labels { font-size: 10px; letter-spacing: 1px; height: 22px; }
+  .and-decimal { font-size: 13px; }
+  .truth .tcell { font-size: 13px; padding: 6px 10px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">🌐 IP-адресация · задание 10 ЕГЭ</div>
+  <nav>
+    <button class="tab active" data-tab="lesson">📚 Урок</button>
+    <button class="tab" data-tab="practice">✏️ Закрепление</button>
+    <button class="tab" data-tab="homework">🏠 Самостоятельная работа</button>
+  </nav>
+</header>
+
+<main>
+
+<section id="lesson" class="tab-content active">
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+  <div id="slides">
+
+    <div class="slide active">
+      <div class="slide-card">
+        <div class="title-slide">
+          <h1>IP-адресация и маски</h1>
+          <p class="subtitle">Задание 10 ЕГЭ по информатике</p>
+          <p class="hint">Листайте слайды кнопками внизу или стрелками ← →</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="slide-card">
+        <h2>1. Аналогия с домом и квартирой</h2>
+        <div class="slide-body">
+          <p>Записали адрес без разделителей — непонятно, где дом, а где квартира:</p>
+          <div class="house-demo">
+            <div class="house-display" id="houseDisplay">1542</div>
+            <div class="house-labels" id="houseLabels">
+              <span class="lbl-h">дом</span>
+              <span class="lbl-f">квартира</span>
+            </div>
+            <label class="house-toggle">
+              <input type="checkbox" id="useSep">
+              <span class="switch"></span>
+              <span id="toggleText">Показать с разделителем</span>
+            </label>
+          </div>
+          <p class="muted">Разделитель помогает увидеть структуру адреса.<br>В IP-адресах ту же роль играет <strong>маска</strong>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="slide-card">
+        <h2>2. IP-адрес: переводим в двоичную систему</h2>
+        <div class="slide-body">
+          <p>Каждый октет IP-адреса переводим в 2 сс — ровно по 8 бит:</p>
+          <div class="ip-octets">
+            <div class="octet-group"><div class="dec">192</div><div class="arrow">↓</div><div class="bin">11000000</div></div>
+            <div class="octet-sep">.</div>
+            <div class="octet-group"><div class="dec">168</div><div class="arrow">↓</div><div class="bin">10101000</div></div>
+            <div class="octet-sep">.</div>
+            <div class="octet-group"><div class="dec">1</div><div class="arrow">↓</div><div class="bin">00000001</div></div>
+            <div class="octet-sep">.</div>
+            <div class="octet-group"><div class="dec">10</div><div class="arrow">↓</div><div class="bin">00001010</div></div>
+          </div>
+          <p class="muted">32 бита подряд. Где здесь «номер дома», а где «номер квартиры»? Непонятно — нужен разделитель.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="slide-card">
+        <h2>3. Маска — тот самый разделитель</h2>
+        <div class="slide-body">
+          <p>Маска — 32 бита, где <strong>сначала идут единицы, потом нули</strong>. Единицы указывают, где «сеть», нули — где «хост».</p>
+          <div class="interactive">
+            <div class="slider-block">
+              <label>Длина маски: <strong id="maskLen">24</strong> (единиц в маске)</label>
+              <input type="range" id="maskSlider" min="8" max="32" value="24">
+            </div>
+            <div class="bit-labels" id="maskLabels"></div>
+            <div class="bit-display" id="maskIp"></div>
+            <div class="bit-display" id="maskMask"></div>
+          </div>
+          <p class="muted">Маска в 10 сс: <code id="maskDec">255.255.255.0</code></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="slide-card">
+        <h2>4. Сколько компьютеров влезет в сеть?</h2>
+        <div class="slide-body">
+          <p>Двигайте ползунок: <strong>сеть остаётся неизменной</strong>, а номер хоста меняется.</p>
+          <div class="interactive">
+            <div class="slider-block">
+              <label>Номер хоста: <strong id="hostNumVal">0</strong></label>
+              <input type="range" id="hostNumSlider" min="0" max="255" value="0">
+            </div>
+            <div class="bit-labels" id="hostLabels"></div>
+            <div class="bit-display" id="hostIpLine"></div>
+            <p class="muted" style="margin-top:12px">Текущий IP: <code id="hostIpDec">192.168.1.0</code></p>
+          </div>
+          <p class="spacer-top">Сколько всего вариантов номера хоста, если под него отведено <strong>k</strong> бит?</p>
+          <button class="step-btn" id="showFormula1" style="align-self:center">Показать формулу</button>
+          <div class="formula-box hidden" id="formula1">Всего комбинаций = 2<sup>k</sup></div>
+          <button class="step-btn secondary hidden" id="showFormula2" style="align-self:center; margin-top:6px">А теперь?</button>
+          <div class="formula-box hidden" id="formula2">Но два адреса заняты! Хостов = 2<sup>k</sup> − 2</div>
+          <p class="muted hidden" id="goWhyNote">Почему «−2» — на следующем слайде →</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="slide-card">
+        <h2>5. Почему «−2»: занятые адреса</h2>
+        <div class="slide-body">
+          <p>Хост-битов может быть <strong>любое количество</strong> — не только 8. Всё зависит от маски:</p>
+          <div class="interactive">
+            <div class="slider-block">
+              <label>Длина маски: <strong id="why2Len">27</strong> → под хост <strong id="why2K">5</strong> бит</label>
+              <input type="range" id="why2Slider" min="24" max="30" value="27">
+            </div>
+            <div class="bit-labels" id="why2Labels"></div>
+            <div class="bit-display" id="why2Ip"></div>
+          </div>
+          <p>Хост-часть — это <strong>все нули в маске</strong>. Два особых случая:</p>
+          <div class="two-cards">
+            <div class="card">
+              <h3>хост-биты = 0…0</h3>
+              <p><strong>Адрес сети</strong> — «весь дом целиком». Компьютеру не присваивают.</p>
+              <div class="bit-display" id="why2NetBits" style="justify-content:center; margin-top:8px"></div>
+              <div class="dec-mini" id="why2NetDec">192.168.1.0</div>
+            </div>
+            <div class="card">
+              <h3>хост-биты = 1…1</h3>
+              <p><strong>Широковещательный</strong> — «объявление всему дому». Тоже не присваивают.</p>
+              <div class="bit-display" id="why2BcastBits" style="justify-content:center; margin-top:8px"></div>
+              <div class="dec-mini" id="why2BcastDec">192.168.1.31</div>
+            </div>
+          </div>
+          <div class="formula-box">Хостов = 2<sup>k</sup> − 2 &nbsp;(k — число нулей в маске)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="slide-card">
+        <h2>6. Как найти адрес сети: поразрядная конъюнкция</h2>
+        <div class="slide-body">
+          <p>Операция <strong>И</strong> (AND) применяется <strong>к каждой паре бит отдельно</strong>:</p>
+          <div class="truth">
+            <div class="tcell">1 И 1 = <span class="res">1</span></div>
+            <div class="tcell">1 И 0 = <span class="res">0</span></div>
+            <div class="tcell">0 И 1 = <span class="res">0</span></div>
+            <div class="tcell">0 И 0 = <span class="res">0</span></div>
+          </div>
+          <div class="and-block">
+            <div class="and-decimal">192.168.1.10</div>
+            <div class="bit-row-wrap">
+              <span class="bit-row-label">IP:</span>
+              <div class="bit-display" id="andIp" style="justify-content:flex-start"></div>
+            </div>
+            <div class="and-decimal" style="opacity:0; transition:opacity .3s" id="andMaskDec">255.255.255.0</div>
+            <div class="bit-row-wrap" id="andMaskRow" style="opacity:0; transition:opacity .3s">
+              <span class="bit-row-label">Маска:</span>
+              <div class="bit-display" id="andMask" style="justify-content:flex-start"></div>
+            </div>
+            <div class="and-divider" id="andDivider" style="opacity:0; transition:opacity .3s"></div>
+            <div class="and-decimal result" id="andResultDec" style="opacity:0; transition:opacity .3s">192.168.1.0</div>
+            <div class="bit-row-wrap">
+              <span class="bit-row-label">Сеть:</span>
+              <div class="bit-display" id="andRes" style="justify-content:flex-start"></div>
+            </div>
+          </div>
+          <div class="step-controls">
+            <button class="step-btn" id="andNext">▶ Следующий бит</button>
+            <button class="step-btn" id="andPlay">▶▶ Проиграть всё</button>
+            <button class="step-btn secondary" id="andReset">⟲ Заново</button>
+          </div>
+          <div class="step-caption" id="andCaption">Нажмите «Следующий бит» или «Проиграть всё»</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Слайд 7: гуляющие биты в 3-м октете ===== -->
+    <div class="slide">
+      <div class="slide-card">
+        <h2>7. Сколько масок подходит?</h2>
+        <div class="slide-body">
+          <p>Дано: <strong>узел</strong> <code>192.168.130.0</code>, <strong>адрес сети</strong> <code>192.168.128.0</code>. Сколько масок подходит?</p>
+
+          <div class="interactive" style="padding: 16px 14px">
+            <div class="bit-row-wrap">
+              <span class="bit-row-label">Узел:</span>
+              <div class="bit-display" id="mmIp" style="justify-content:flex-start"></div>
+            </div>
+            <div class="bit-row-wrap">
+              <span class="bit-row-label">Сеть:</span>
+              <div class="bit-display" id="mmNet" style="justify-content:flex-start"></div>
+            </div>
+            <div class="bit-row-wrap">
+              <span class="bit-row-label">Маска:</span>
+              <div class="bit-display" id="mmMask" style="justify-content:flex-start"></div>
+            </div>
+          </div>
+
+          <div class="step-controls">
+            <button class="step-btn" id="mmNext">▶ Следующий шаг</button>
+            <button class="step-btn secondary" id="mmReset">⟲ Заново</button>
+          </div>
+          <div class="step-caption" id="mmCaption">Нажмите «Следующий шаг»</div>
+
+          <div class="combos" id="mmCombos"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="slide-card">
+        <h2>8. Формула подсчёта количества масок</h2>
+        <div class="slide-body">
+          <ol>
+            <li>Записать <strong>адрес узла</strong> и <strong>адрес сети</strong> в 2 сс.</li>
+            <li>Найти <strong>последнюю 1</strong> в адресе сети — до неё включительно маска содержит 1.</li>
+            <li>Найти <strong>первый бит, где у узла 1, а у сети 0</strong> — от него и правее маска содержит 0.</li>
+            <li>Между ними — <strong>«гуляющие» биты</strong> (у обоих адресов там 0).</li>
+            <li>Маска может «обрезаться» в любом месте между ними — но обязательно сначала 1, потом 0.</li>
+          </ol>
+          <div class="formula-box" style="font-size:24px">
+            Количество масок = (число «гуляющих» битов) + 1
+          </div>
+          <p class="muted">«+1» — возможных точек обрезки n + 1: не обрезать вовсе, обрезать после 1-го гуляющего бита, …, после последнего.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="slide-card">
+        <h2>9. Шпаргалка</h2>
+        <div class="slide-body">
+          <div class="formula-box">Адрес сети = IP И Маска</div>
+          <div class="formula-box">Хостов в сети = 2<sup>k</sup> − 2 &nbsp;(k — нулей в маске)</div>
+          <div class="formula-box">Количество масок = «гуляющие» биты + 1</div>
+          <p><strong>Алгоритм для задания 10:</strong></p>
+          <ol>
+            <li>Перевести нужные октеты в 2 сс.</li>
+            <li>Найти адрес сети (если он не дан) через И.</li>
+            <li>Сравнить узел и сеть бит за битом.</li>
+            <li>Найти «гуляющие» биты между последней 1 в адресе сети и первым расхождением.</li>
+            <li>Ответ: их число + 1.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="controls">
+    <button id="prevBtn">← Назад</button>
+    <span class="counter" id="counter">1 / 10</span>
+    <button id="nextBtn">Вперёд →</button>
+  </div>
+</section>
+
+<section id="practice" class="tab-content">
+  <div class="slide-card">
+    <h2>✏️ Закрепление</h2>
+    <p class="muted" style="margin-bottom:20px">Введите ответ и нажмите «Проверить». Кнопка «Подсказка» подскажет, с чего начать.</p>
+    <div id="practiceTasks"></div>
+  </div>
+</section>
+
+<section id="homework" class="tab-content">
+  <div class="slide-card">
+    <h2>🏠 Самостоятельная работа</h2>
+    <p class="muted" style="margin-bottom:20px">20 заданий для отработки. Сначала пробуйте сами — подсказки на крайний случай.</p>
+    <div id="homeworkTasks"></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* ============ Вкладки ============ */
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+/* ============ Слайды ============ */
+const slides = document.querySelectorAll('#slides .slide');
+const totalSlides = slides.length;
+let curSlide = 0;
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const counter = document.getElementById('counter');
+const progressBar = document.getElementById('progressBar');
+
+function showSlide(i) {
+  curSlide = Math.max(0, Math.min(totalSlides - 1, i));
+  slides.forEach((s, idx) => s.classList.toggle('active', idx === curSlide));
+  counter.textContent = (curSlide + 1) + ' / ' + totalSlides;
+  prevBtn.disabled = curSlide === 0;
+  nextBtn.disabled = curSlide === totalSlides - 1;
+  progressBar.style.width = ((curSlide + 1) / totalSlides * 100) + '%';
+  if (curSlide === 6) resetAnd();
+  if (curSlide === 7) resetMaskAnim();
+}
+prevBtn.onclick = () => showSlide(curSlide - 1);
+nextBtn.onclick = () => showSlide(curSlide + 1);
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lesson').classList.contains('active')) return;
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowLeft') showSlide(curSlide - 1);
+  if (e.key === 'ArrowRight') showSlide(curSlide + 1);
+});
+showSlide(0);
+
+/* ============ Дом/квартира ============ */
+const houseDisplay = document.getElementById('houseDisplay');
+const houseLabels  = document.getElementById('houseLabels');
+const useSep       = document.getElementById('useSep');
+const toggleText   = document.getElementById('toggleText');
+function renderHouse() {
+  if (useSep.checked) {
+    houseDisplay.innerHTML = '<span class="h">15</span><span class="sep">|</span><span class="f">42</span>';
+    houseLabels.classList.add('show');
+    toggleText.textContent = 'Убрать разделитель';
+  } else {
+    houseDisplay.innerHTML = '1542';
+    houseLabels.classList.remove('show');
+    toggleText.textContent = 'Показать с разделителем';
+  }
+}
+useSep.addEventListener('change', renderHouse);
+renderHouse();
+
+/* ============ Утилиты ============ */
+const BIT_W = 22, DOT_W = 12;
+const IP_BITS = '11000000' + '10101000' + '00000001' + '00001010';
+
+function renderBits(bits, colorFn, extraFn) {
+  let html = '';
+  for (let i = 0; i < 32; i++) {
+    if (i > 0 && i % 8 === 0) html += '<span class="dot">.</span>';
+    const cls = colorFn ? colorFn(i) : '';
+    const extra = extraFn ? extraFn(i) : '';
+    html += '<span class="bit ' + cls + ' ' + extra + '">' + bits[i] + '</span>';
+  }
+  return html;
+}
+function renderBits8(bits, colorFn) {
+  let html = '';
+  for (let i = 0; i < 8; i++) {
+    const cls = colorFn ? colorFn(i) : '';
+    const ch = bits[i] === undefined ? '·' : bits[i];
+    html += '<span class="bit ' + cls + '">' + ch + '</span>';
+  }
+  return html;
+}
+function bitsToDec(bits) {
+  const arr = [];
+  for (let i = 0; i < 32; i += 8) arr.push(parseInt(bits.slice(i, i + 8), 2));
+  return arr.join('.');
+}
+
+/* ============ Слайд 4 ============ */
+const maskSlider = document.getElementById('maskSlider');
+const maskLenEl  = document.getElementById('maskLen');
+const maskLabels = document.getElementById('maskLabels');
+const maskIpEl   = document.getElementById('maskIp');
+const maskMaskEl = document.getElementById('maskMask');
+const maskDecEl  = document.getElementById('maskDec');
+
+function renderMaskLabels(len) {
+  let netDots = 0, hostDots = 0;
+  [8, 16, 24].forEach(pos => { if (pos < len) netDots++; else hostDots++; });
+  const netW  = len * BIT_W + netDots * DOT_W;
+  const hostW = (32 - len) * BIT_W + hostDots * DOT_W;
+  let html = '';
+  if (len > 0)  html += '<div class="lbl net"  style="width:' + netW  + 'px">СЕТЬ</div>';
+  if (len < 32) html += '<div class="lbl host" style="width:' + hostW + 'px">ХОСТ</div>';
+  maskLabels.innerHTML = html;
+}
+function renderMaskSlide() {
+  const len = +maskSlider.value;
+  maskLenEl.textContent = len;
+  const maskBits = '1'.repeat(len) + '0'.repeat(32 - len);
+  maskIpEl.innerHTML = renderBits(IP_BITS, i => i < len ? 'net' : 'host');
+  maskMaskEl.innerHTML = renderBits(maskBits, i => i < len ? 'net' : 'host');
+  maskDecEl.textContent = bitsToDec(maskBits);
+  renderMaskLabels(len);
+}
+maskSlider.addEventListener('input', renderMaskSlide);
+renderMaskSlide();
+
+/* ============ Слайд 5 ============ */
+const hostSlider = document.getElementById('hostNumSlider');
+const hostNumVal = document.getElementById('hostNumVal');
+const hostLabels = document.getElementById('hostLabels');
+const hostIpLine = document.getElementById('hostIpLine');
+const hostIpDec  = document.getElementById('hostIpDec');
+const showFormula1 = document.getElementById('showFormula1');
+const showFormula2 = document.getElementById('showFormula2');
+const formula1 = document.getElementById('formula1');
+const formula2 = document.getElementById('formula2');
+const goWhyNote = document.getElementById('goWhyNote');
+const NET_PREFIX = '11000000' + '10101000' + '00000001';
+
+function renderHostSlide() {
+  const hostVal = +hostSlider.value;
+  hostNumVal.textContent = hostVal;
+  const hostBits = hostVal.toString(2).padStart(8, '0');
+  hostIpLine.innerHTML = renderBits(NET_PREFIX + hostBits, i => i < 24 ? 'net' : 'host');
+  hostIpDec.textContent = '192.168.1.' + hostVal;
+  const netW  = 24 * BIT_W + 2 * DOT_W;
+  const hostW = 8 * BIT_W + 1 * DOT_W;
+  hostLabels.innerHTML =
+    '<div class="lbl net"  style="width:' + netW  + 'px">СЕТЬ — неизменна</div>' +
+    '<div class="lbl host" style="width:' + hostW + 'px">ХОСТ</div>';
+}
+hostSlider.addEventListener('input', renderHostSlide);
+renderHostSlide();
+
+showFormula1.onclick = () => {
+  formula1.classList.remove('hidden');
+  showFormula1.classList.add('hidden');
+  showFormula2.classList.remove('hidden');
+};
+showFormula2.onclick = () => {
+  formula2.classList.remove('hidden');
+  goWhyNote.classList.remove('hidden');
+  showFormula2.classList.add('hidden');
+};
+
+/* ============ Слайд 6 ============ */
+const why2Slider = document.getElementById('why2Slider');
+const why2Len = document.getElementById('why2Len');
+const why2K   = document.getElementById('why2K');
+const why2Labels = document.getElementById('why2Labels');
+const why2Ip = document.getElementById('why2Ip');
+const why2NetBits = document.getElementById('why2NetBits');
+const why2BcastBits = document.getElementById('why2BcastBits');
+const why2NetDec = document.getElementById('why2NetDec');
+const why2BcastDec = document.getElementById('why2BcastDec');
+
+function renderWhy2() {
+  const len = +why2Slider.value;
+  const k = 32 - len;
+  why2Len.textContent = len;
+  why2K.textContent = k;
+
+  const lastOctetZero = '0'.repeat(8);
+  const fullNetBits   = NET_PREFIX + lastOctetZero;
+
+  why2Ip.innerHTML = renderBits(fullNetBits, i => i < len ? 'net' : 'host');
+
+  const netDots = [8,16,24].filter(p => p < len).length;
+  const hostDots = 3 - netDots;
+  const netW  = len * BIT_W + netDots * DOT_W;
+  const hostW = (32 - len) * BIT_W + hostDots * DOT_W;
+  let lblHtml = '';
+  if (len > 0) lblHtml += '<div class="lbl net" style="width:' + netW + 'px">СЕТЬ</div>';
+  if (len < 32) lblHtml += '<div class="lbl host" style="width:' + hostW + 'px">ХОСТ (' + k + ' бит)</div>';
+  why2Labels.innerHTML = lblHtml;
+
+  const hostZeros = '0'.repeat(k);
+  const hostOnes  = '1'.repeat(k);
+  why2NetBits.innerHTML = renderBits8(hostZeros.padEnd(8, '·'), i => i < k ? 'host' : 'empty');
+  why2BcastBits.innerHTML = renderBits8(hostOnes.padEnd(8, '·'), i => i < k ? 'host' : 'empty');
+
+  const bcastLastOctet = (1 << k) - 1;
+  why2NetDec.textContent = '192.168.1.0';
+  why2BcastDec.textContent = '192.168.1.' + bcastLastOctet;
+}
+why2Slider.addEventListener('input', renderWhy2);
+renderWhy2();
+
+/* ============ Слайд 7: AND ============ */
+const AND_IP   = '11000000' + '10101000' + '00000001' + '00001010';
+const AND_MASK = '11111111' + '11111111' + '11111111' + '00000000';
+let AND_RES = '';
+for (let i = 0; i < 32; i++) AND_RES += (AND_IP[i] === '1' && AND_MASK[i] === '1') ? '1' : '0';
+
+const andIpEl   = document.getElementById('andIp');
+const andMaskEl = document.getElementById('andMask');
+const andResEl  = document.getElementById('andRes');
+const andMaskRow = document.getElementById('andMaskRow');
+const andMaskDec = document.getElementById('andMaskDec');
+const andDivider = document.getElementById('andDivider');
+const andResultDec = document.getElementById('andResultDec');
+const andNext = document.getElementById('andNext');
+const andPlay = document.getElementById('andPlay');
+const andReset = document.getElementById('andReset');
+const andCaption = document.getElementById('andCaption');
+
+let andIdx = -1;
+let andTimer = null;
+
+function renderAnd() {
+  let ipHtml = '';
+  for (let i = 0; i < 32; i++) {
+    if (i > 0 && i % 8 === 0) ipHtml += '<span class="dot">.</span>';
+    let extra = '';
+    if (i === andIdx) extra = 'current';
+    else if (i < andIdx) extra = 'done';
+    ipHtml += '<span class="bit net ' + extra + '">' + AND_IP[i] + '</span>';
+  }
+  andIpEl.innerHTML = ipHtml;
+
+  let maskHtml = '';
+  for (let i = 0; i < 32; i++) {
+    if (i > 0 && i % 8 === 0) maskHtml += '<span class="dot">.</span>';
+    let extra = '';
+    if (i === andIdx) extra = 'current';
+    else if (i < andIdx) extra = 'done';
+    maskHtml += '<span class="bit net ' + extra + '">' + AND_MASK[i] + '</span>';
+  }
+  andMaskEl.innerHTML = maskHtml;
+
+  let resHtml = '';
+  for (let i = 0; i < 32; i++) {
+    if (i > 0 && i % 8 === 0) resHtml += '<span class="dot">.</span>';
+    let ch = '·', cls = 'empty', extra = '';
+    if (i < andIdx) {
+      cls = AND_RES[i] === '1' ? 'one' : 'zero';
+      ch = AND_RES[i];
+      extra = 'done';
+    } else if (i === andIdx) {
+      cls = AND_RES[i] === '1' ? 'one' : 'zero';
+      ch = AND_RES[i];
+      extra = 'current';
+    }
+    resHtml += '<span class="bit ' + cls + ' ' + extra + '">' + ch + '</span>';
+  }
+  andResEl.innerHTML = resHtml;
+
+  const showMask = andIdx >= 0;
+  andMaskDec.style.opacity = showMask ? 1 : 0;
+  andMaskRow.style.opacity = showMask ? 1 : 0;
+  andDivider.style.opacity = showMask ? 1 : 0;
+
+  andResultDec.style.opacity = (andIdx >= 31) ? 1 : 0;
+
+  if (andIdx < 0) {
+    andCaption.textContent = 'Нажмите «Следующий бит» или «Проиграть всё»';
+  } else {
+    const b = andIdx;
+    const a = AND_IP[b], m = AND_MASK[b], r = AND_RES[b];
+    const resClass = r === '1' ? 'pos' : 'neg';
+    andCaption.innerHTML =
+      'Бит ' + (b + 1) + ': <span class="num">' + a + '</span> И <span class="num">' + m +
+      '</span> = <span class="' + resClass + '">' + r + '</span>';
+    if (andIdx === 31) {
+      andCaption.innerHTML = '<span class="pos">Готово!</span> Адрес сети = 192.168.1.0';
+    }
+  }
+
+  andNext.disabled = andIdx >= 31;
+  andPlay.disabled = andIdx >= 31;
+}
+
+function resetAnd() {
+  if (andTimer) { clearInterval(andTimer); andTimer = null; }
+  andIdx = -1;
+  renderAnd();
+}
+andNext.onclick = () => { if (andIdx < 31) { andIdx++; renderAnd(); } };
+andReset.onclick = resetAnd;
+andPlay.onclick = () => {
+  if (andTimer) return;
+  if (andIdx >= 31) resetAnd();
+  andTimer = setInterval(() => {
+    if (andIdx < 31) { andIdx++; renderAnd(); }
+    else { clearInterval(andTimer); andTimer = null; }
+  }, 260);
+  andIdx = 0; renderAnd();
+};
+renderAnd();
+
+/* ============ Слайд 8: несколько масок ============ */
+// Узел: 192.168.130.0 = 11000000.10101000.10000010.00000000
+// Сеть: 192.168.128.0 = 11000000.10101000.10000000.00000000
+//                       ^^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^
+// Последняя 1 в адресе сети — глобально бит 16 (1-й бит 3-го октета).
+// Первое расхождение (узел=1, сеть=0) — глобально бит 22 (7-й бит 3-го октета).
+// Гуляющие — биты 17..21 (2..6 биты 3-го октета), ровно 5 штук ПО СЕРЕДИНЕ IP.
+
+const MM_IP  = '11000000' + '10101000' + '10000010' + '00000000'; // 192.168.130.0
+const MM_NET = '11000000' + '10101000' + '10000000' + '00000000'; // 192.168.128.0
+
+// Последняя 1 в адресе сети
+let MM_LAST_ONE = -1;
+for (let i = 0; i < 32; i++) if (MM_NET[i] === '1') MM_LAST_ONE = i;
+
+// Первое расхождение
+let MM_FIRST_DIV = -1;
+for (let i = 0; i < 32; i++) {
+  if (MM_IP[i] === '1' && MM_NET[i] === '0') { MM_FIRST_DIV = i; break; }
+}
+
+// Гуляющие биты между ними
+const MM_WALKING = [];
+for (let i = MM_LAST_ONE + 1; i < MM_FIRST_DIV; i++) MM_WALKING.push(i);
+
+const mmIpEl  = document.getElementById('mmIp');
+const mmNetEl = document.getElementById('mmNet');
+const mmMaskEl = document.getElementById('mmMask');
+const mmCaption = document.getElementById('mmCaption');
+const mmNext = document.getElementById('mmNext');
+const mmReset = document.getElementById('mmReset');
+const mmCombos = document.getElementById('mmCombos');
+
+let mmStep = 0;
+const MM_TOTAL = 7;
+
+// Все допустимые паттерны walking-битов: сначала 1, потом 0 (n+1 вариантов)
+const MM_COMBOS = [];
+for (let ones = 0; ones <= MM_WALKING.length; ones++) {
+  MM_COMBOS.push('1'.repeat(ones) + '0'.repeat(MM_WALKING.length - ones));
+}
+
+// Утилита: какой это октет и какая позиция внутри октета (нумерация с 1)
+function octetAndPos(globalIdx) {
+  const oct = Math.floor(globalIdx / 8) + 1;
+  const pos = globalIdx % 8 + 1;
+  return { oct: oct, pos: pos };
+}
+
+function renderMmBase(hiNet, hiZero) {
+  let ipHtml = '', netHtml = '';
+  for (let i = 0; i < 32; i++) {
+    if (i > 0 && i % 8 === 0) { ipHtml += '<span class="dot">.</span>'; netHtml += '<span class="dot">.</span>'; }
+    let ipExtra = '', netExtra = '';
+    if (hiNet === i)  { ipExtra  += ' hi-net';  netExtra  += ' hi-net'; }
+    if (hiZero === i) { ipExtra  += ' hi-zero'; netExtra  += ' hi-zero'; }
+    ipHtml  += '<span class="bit net' + ipExtra  + '">' + MM_IP[i]  + '</span>';
+    netHtml += '<span class="bit net' + netExtra + '">' + MM_NET[i] + '</span>';
+  }
+  mmIpEl.innerHTML = ipHtml;
+  mmNetEl.innerHTML = netHtml;
+}
+
+function renderMmMask(maskArr, hiNet, hiZero, hiFree) {
+  let html = '';
+  for (let i = 0; i < 32; i++) {
+    if (i > 0 && i % 8 === 0) html += '<span class="dot">.</span>';
+    const v = maskArr[i];
+    let cls = 'empty', extra = '', ch = '·';
+    if (v === '1') { cls = 'one'; ch = '1'; }
+    else if (v === '0') { cls = 'zero'; ch = '0'; }
+    if (hiNet === i) extra += ' hi-net';
+    if (hiZero === i) extra += ' hi-zero';
+    if (hiFree && MM_WALKING.indexOf(i) !== -1) { cls = 'free'; extra += ' hi-free'; }
+    html += '<span class="bit ' + cls + extra + '">' + ch + '</span>';
+  }
+  mmMaskEl.innerHTML = html;
+}
+
+function applyMmStep() {
+  const maskArr = new Array(32).fill(null);
+  let hiNet = null, hiZero = null, free = false;
+
+  // Шаг 1: подсветить последнюю 1 в адресе сети
+  if (mmStep >= 1) hiNet = MM_LAST_ONE;
+
+  // Шаг 2: заполнить маску 1-цами до неё включительно
+  if (mmStep >= 2) {
+    for (let i = 0; i <= MM_LAST_ONE; i++) maskArr[i] = '1';
+  }
+
+  // Шаг 3: подсветить первый бит, где узел=1, сеть=0
+  if (mmStep >= 3) hiZero = MM_FIRST_DIV;
+
+  // Шаг 4: заполнить маску 0-цами от него до конца
+  if (mmStep >= 4) {
+    for (let i = MM_FIRST_DIV; i < 32; i++) maskArr[i] = '0';
+  }
+
+  // Шаг 5: подсветить гуляющие биты
+  if (mmStep >= 5) free = true;
+
+  renderMmBase(hiNet, hiZero);
+  renderMmMask(maskArr, hiNet, hiZero, free);
+
+  const pLast = octetAndPos(MM_LAST_ONE);
+  const pDiv  = octetAndPos(MM_FIRST_DIV);
+  const pWalkFirst = octetAndPos(MM_WALKING[0]);
+  const pWalkLast  = octetAndPos(MM_WALKING[MM_WALKING.length - 1]);
+
+  // Подпись
+  if (mmStep === 0) {
+    mmCaption.textContent = 'Узел и адрес сети в двоичном виде. Где маска может «разрезаться»?';
+  } else if (mmStep === 1) {
+    mmCaption.innerHTML = 'Шаг 1: находим <strong>последнюю 1</strong> в адресе сети — ' +
+      '<span class="num">' + (MM_LAST_ONE + 1) + '-й бит</span> ' +
+      '(' + pLast.pos + '-й бит ' + pLast.oct + '-го октета). До него и на нём маска точно = 1.';
+  } else if (mmStep === 2) {
+    mmCaption.innerHTML = 'Шаг 2: заполняем маску <span class="pos">единицами</span> до этой позиции включительно.';
+  } else if (mmStep === 3) {
+    mmCaption.innerHTML = 'Шаг 3: находим первый бит, где узел = <span class="num">1</span>, а сеть = <span class="num">0</span> — ' +
+      '<span class="num">' + (MM_FIRST_DIV + 1) + '-й бит</span> ' +
+      '(' + pDiv.pos + '-й бит ' + pDiv.oct + '-го октета). Здесь маска точно = 0.';
+  } else if (mmStep === 4) {
+    mmCaption.innerHTML = 'Шаг 4: заполняем маску <span class="neg">нулями</span> от этой позиции и до конца.';
+  } else if (mmStep === 5) {
+    mmCaption.innerHTML = 'Шаг 5: между ними остались <span class="num">«гуляющие»</span> биты — ' +
+      '<span class="num">' + MM_WALKING.length + '</span> шт. ' +
+      '(' + (MM_WALKING[0] + 1) + '–' + (MM_WALKING[MM_WALKING.length - 1] + 1) + '-е биты, ' +
+      pWalkFirst.pos + '–' + pWalkLast.pos + ' биты ' + pWalkFirst.oct + '-го октета). ' +
+      'У обоих адресов там 0, но маска может быть любой.';
+  } else if (mmStep === 6) {
+    mmCaption.innerHTML = 'Но маска должна быть <strong>сначала 1, потом 0</strong> — без «дырок». ' +
+      'Значит, на «гуляющих» битах допустимы только такие паттерны (их ' +
+      '<span class="num">' + MM_COMBOS.length + '</span>):';
+  } else if (mmStep === 7) {
+    mmCaption.innerHTML = 'Формула: <span class="num">' + MM_WALKING.length + '</span> + 1 = <span class="num">' + MM_COMBOS.length + '</span> масок.';
+  }
+
+  // Показ паттернов
+  if (mmStep >= 6) {
+    let html = '';
+    MM_COMBOS.forEach((pattern, idx) => {
+      const onesInWalk = pattern.split('1').length - 1;
+      // Общая длина маски: до MM_LAST_ONE включительно = MM_LAST_ONE+1 единиц,
+      // плюс onesInWalk единиц на гуляющих битах.
+      const totalOnes = (MM_LAST_ONE + 1) + onesInWalk;
+      const maskStr = '1'.repeat(totalOnes) + '0'.repeat(32 - totalOnes);
+      const maskDec = bitsToDec(maskStr);
+      html += '<div class="combo" style="transition-delay:' + (idx * 50) + 'ms">' +
+        pattern + ' <span class="mask-dec">→ /' + totalOnes + ' (' + maskDec + ')</span>' +
+        '</div>';
+    });
+    mmCombos.innerHTML = html;
+    requestAnimationFrame(() => {
+      mmCombos.querySelectorAll('.combo').forEach(c => c.classList.add('show'));
+    });
+  } else {
+    mmCombos.innerHTML = '';
+  }
+
+  mmNext.disabled = mmStep >= MM_TOTAL;
+}
+
+function resetMaskAnim() {
+  mmStep = 0;
+  applyMmStep();
+  mmCaption.textContent = 'Нажмите «Следующий шаг»';
+  mmNext.disabled = false;
+}
+mmNext.onclick = () => { if (mmStep < MM_TOTAL) { mmStep++; applyMmStep(); } };
+mmReset.onclick = resetMaskAnim;
+resetMaskAnim();
+
+/* ============ Задания ============ */
+const practiceTasks = [
+  { q: 'Дан IP-адрес <code>192.168.10.25</code> и маска <code>255.255.255.0</code>. Найдите адрес сети.',
+    a: '192.168.10.0', hint: 'Последний октет маски = 0, значит и в адресе сети он = 0. Первые три октета берутся из IP без изменений.' },
+  { q: 'Маска сети — <code>255.255.255.192</code>. Сколько компьютеров (хостов) можно подключить к такой сети?',
+    a: '62', hint: '192 = 11000000₂ → в последнем октете 6 нулей. 2⁶ − 2 = 62.' },
+  { q: 'IP-адрес <code>10.0.5.100</code>, маска <code>255.255.0.0</code>. Сколько бит отведено под номер хоста?',
+    a: '16', hint: 'Маска /16 → под хост остаётся 32 − 16 = 16 бит.' },
+  { q: 'Адрес узла <code>192.168.1.190</code>, адрес сети <code>192.168.1.128</code>. Сколько масок подходит?',
+    a: '2', hint: '190 = 10111110₂, 128 = 10000000₂. Последняя 1 в адресе сети — 1-й бит октета. Первое расхождение — 3-й бит. «Гуляющих» битов 1 → масок 1 + 1 = 2.' },
+  { q: 'IP-адрес <code>172.16.5.10</code>, маска <code>255.255.240.0</code>. Найдите адрес сети.',
+    a: '172.16.0.0', hint: '240 = 11110000₂, 5 = 00000101₂. 5 И 240 = 0.' }
+];
+
+const homeworkTasks = [
+  { q: 'IP <code>192.168.100.50</code>, маска <code>255.255.255.192</code>. Найдите адрес сети.',
+    a: '192.168.100.0', hint: '50 = 00110010₂, 192 = 11000000₂. 50 И 192 = 0.' },
+  { q: 'IP <code>192.168.100.200</code>, маска <code>255.255.255.192</code>. Найдите адрес сети.',
+    a: '192.168.100.192', hint: '200 = 11001000₂, 192 = 11000000₂. 200 И 192 = 192.' },
+  { q: 'Маска <code>255.255.255.224</code>. Сколько хостов в такой сети?',
+    a: '30', hint: '224 = 11100000₂ → 5 нулей. 2⁵ − 2 = 30.' },
+  { q: 'Маска <code>255.255.255.128</code>. Сколько хостов в такой сети?',
+    a: '126', hint: '128 = 10000000₂ → 7 нулей. 2⁷ − 2 = 126.' },
+  { q: 'Маска <code>255.255.255.252</code>. Сколько хостов в такой сети?',
+    a: '2', hint: '252 = 11111100₂ → 2 нуля. 2² − 2 = 2.' },
+  { q: 'Маска <code>255.255.254.0</code>. Сколько хостов в такой сети?',
+    a: '510', hint: '254 = 11111110₂ → всего 9 нулей. 2⁹ − 2 = 510.' },
+  { q: 'Маска <code>255.255.0.0</code>. Сколько хостов в такой сети?',
+    a: '65534', hint: '16 нулей в маске. 2¹⁶ − 2 = 65534.' },
+  { q: 'Сколько единиц в двоичной записи маски <code>255.255.255.240</code>?',
+    a: '28', hint: '240 = 11110000₂. 8 + 8 + 8 + 4 = 28.' },
+  { q: 'Маска содержит 26 единиц. Запишите её в десятичном виде.',
+    a: '255.255.255.192', hint: '26 единиц: 8 + 8 + 8 + 2. Последний октет: 11000000₂ = 192.' },
+  { q: 'IP <code>10.10.10.10</code>, маска <code>255.255.255.240</code>. Найдите адрес сети.',
+    a: '10.10.10.0', hint: '10 = 00001010₂, 240 = 11110000₂. 10 И 240 = 0.' },
+  { q: 'IP <code>10.10.10.20</code>, маска <code>255.255.255.240</code>. Найдите адрес сети.',
+    a: '10.10.10.16', hint: '20 = 00010100₂, 240 = 11110000₂. 20 И 240 = 16.' },
+  { q: 'IP <code>128.128.128.128</code>, маска <code>255.255.128.0</code>. Найдите адрес сети.',
+    a: '128.128.128.0', hint: 'Третий октет: 128 И 128 = 128. Четвёртый: 128 И 0 = 0.' },
+  { q: 'IP <code>192.168.0.1</code>, маска <code>255.255.255.128</code>. Найдите адрес сети.',
+    a: '192.168.0.0', hint: '1 = 00000001₂, 128 = 10000000₂. 1 И 128 = 0.' },
+  { q: 'IP <code>192.168.0.130</code>, маска <code>255.255.255.128</code>. Найдите адрес сети.',
+    a: '192.168.0.128', hint: '130 = 10000010₂, 128 = 10000000₂. 130 И 128 = 128.' },
+  { q: 'Сколько всего адресов (включая адрес сети и широковещательный) в сети с маской <code>255.255.255.192</code>?',
+    a: '64', hint: 'Маска /26 → 6 бит под хост. Всего адресов 2⁶ = 64.' },
+  { q: 'IP <code>200.100.50.25</code>, маска <code>255.255.255.240</code>. Найдите адрес сети.',
+    a: '200.100.50.16', hint: '25 = 00011001₂, 240 = 11110000₂. 25 И 240 = 16.' },
+  { q: 'Адрес узла <code>217.19.26.1</code>, адрес сети <code>217.19.24.0</code>. Сколько масок подходит?',
+    a: '2', hint: '26 = 00011010₂, 24 = 00011000₂. Последняя 1 в адресе сети — 5-й бит октета. Первое расхождение — 7-й бит. «Гуляющий» бит один → масок 2.' },
+  { q: 'Адрес узла <code>192.168.1.100</code>, адрес сети <code>192.168.1.96</code>. Сколько масок подходит?',
+    a: '3', hint: '100 = 01100100₂, 96 = 01100000₂. Последняя 1 — 6-й бит. Первое расхождение — 8-й бит. «Гуляющих» битов 2 → масок 3.' },
+  { q: 'IP <code>172.16.50.10</code>, маска <code>255.255.248.0</code>. Найдите адрес сети.',
+    a: '172.16.48.0', hint: '50 = 00110010₂, 248 = 11111000₂. 50 И 248 = 48.' },
+  { q: 'Маска <code>255.255.255.248</code>. Сколько хостов в такой сети?',
+    a: '6', hint: '248 = 11111000₂ → 3 нуля. 2³ − 2 = 6.' }
+];
+
+function renderTasks(containerId, tasks) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  tasks.forEach((task, i) => {
+    const el = document.createElement('div');
+    el.className = 'task';
+    el.innerHTML =
+      '<div class="task-num">' + (i + 1) + '</div>' +
+      '<div class="task-body">' +
+        '<div class="task-q">' + task.q + '</div>' +
+        '<div class="task-row">' +
+          '<input type="text" class="task-input" placeholder="Ответ...">' +
+          '<button class="check-btn">Проверить</button>' +
+          '<button class="hint-btn">Подсказка</button>' +
+        '</div>' +
+        '<div class="task-feedback"></div>' +
+        '<div class="task-hint">' + (task.hint || '') + '</div>' +
+      '</div>';
+    container.appendChild(el);
+    const input = el.querySelector('.task-input');
+    const fb = el.querySelector('.task-feedback');
+    el.querySelector('.check-btn').onclick = () => {
+      const ua = input.value.trim().replace(/\s+/g, '').toLowerCase();
+      const ca = task.a.trim().replace(/\s+/g, '').toLowerCase();
+      if (!ua) { fb.textContent = 'Введите ответ'; fb.className = 'task-feedback wrong'; return; }
+      if (ua === ca) { fb.textContent = '✓ Верно!'; fb.className = 'task-feedback correct'; }
+      else { fb.textContent = '✗ Неверно, попробуйте ещё раз'; fb.className = 'task-feedback wrong'; }
+    };
+    el.querySelector('.hint-btn').onclick = () => el.querySelector('.task-hint').classList.toggle('show');
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') el.querySelector('.check-btn').click(); });
+  });
+}
+renderTasks('practiceTasks', practiceTasks);
+renderTasks('homeworkTasks', homeworkTasks);
+</script>
+
+</body>
+</html>
