@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python для начинающих — курс</title>
+
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --ink: #1c2333;
+    --muted: #5b6478;
+    --accent: #3b6ef5;
+    --accent-2: #22a06b;
+    --border: #e3e7ef;
+    --shadow-sm: 0 1px 2px rgba(28,35,51,0.04);
+    --shadow-md: 0 6px 24px rgba(28,35,51,0.08);
+    --shadow-lg: 0 14px 40px rgba(28,35,51,0.12);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .hero {
+    background:
+      radial-gradient(1200px 400px at 10% -10%, rgba(59,110,245,0.14), transparent 60%),
+      radial-gradient(900px 380px at 90% 0%, rgba(34,160,107,0.12), transparent 55%),
+      linear-gradient(180deg, #ffffff 0%, #f6f7fb 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 56px 24px 48px;
+  }
+  .hero-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+  .hero .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #eef2ff; color: var(--accent);
+    padding: 5px 12px; border-radius: 999px;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .hero h1 {
+    font-size: 40px;
+    line-height: 1.15;
+    margin: 16px 0 12px;
+    letter-spacing: -0.02em;
+  }
+  .hero p.lead {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 720px;
+    margin: 0 0 22px;
+  }
+  .hero .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    margin-top: 22px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .hero .stats b {
+    color: var(--ink);
+    font-weight: 700;
+    margin-right: 4px;
+  }
+
+  main {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 40px 24px 96px;
+  }
+
+  .module {
+    margin-bottom: 44px;
+  }
+  .module-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 0 0 6px;
+  }
+  .module-head .mod-num {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .module-head h2 {
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .module-desc {
+    color: var(--muted);
+    font-size: 14.5px;
+    margin: 0 0 18px;
+  }
+
+  .lesson-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+
+  .lesson {
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--shadow-sm);
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .lesson.available:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: #cdd7f6;
+  }
+  .lesson.available::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--accent);
+  }
+  .lesson.done::before { background: var(--accent-2); }
+  .lesson.soon {
+    opacity: 0.72;
+    cursor: not-allowed;
+  }
+  .lesson.soon::before {
+    background: #c9cfdb;
+  }
+
+  .lesson-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .lesson-tag {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--accent);
+    background: #eef2ff;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.02em;
+  }
+  .lesson.soon .lesson-tag {
+    color: #8b93a4;
+    background: #eef1f7;
+  }
+  .lesson-status {
+    margin-left: auto;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .lesson-status.ready { color: var(--accent-2); }
+  .lesson-status .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .lesson h3 {
+    font-size: 16.5px;
+    margin: 0 0 6px;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+  }
+  .lesson p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .lesson-bottom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .lesson-bottom .arrow {
+    margin-left: auto;
+    color: var(--accent);
+    font-weight: 600;
+    transition: transform .15s ease;
+  }
+  .lesson.available:hover .lesson-bottom .arrow {
+    transform: translateX(3px);
+  }
+  .lesson.soon .lesson-bottom .arrow {
+    color: #a8b0bf;
+  }
+  .lesson-bottom .progress-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .lesson-bottom .progress-mini .bar {
+    width: 60px; height: 5px;
+    background: #e3e7ef;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .lesson-bottom .progress-mini .bar > i {
+    display: block;
+    height: 100%;
+    background: var(--accent-2);
+    width: 0%;
+    transition: width .3s ease;
+  }
+
+  footer.foot {
+    border-top: 1px solid var(--border);
+    padding: 22px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    background: #fff;
+  }
+
+  @media (max-width: 640px) {
+    .hero { padding: 36px 20px 32px; }
+    .hero h1 { font-size: 28px; }
+    .hero p.lead { font-size: 15.5px; }
+    main { padding: 28px 16px 64px; }
+    .lesson-list { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="badge">Курс · Python для начинающих</span>
+    <h1>Тренажёр по Python<br>прямо в браузере</h1>
+    <p class="lead">
+      Теория с примерами, вопросы на понимание и задачи с автоматической проверкой.
+      Ничего не нужно устанавливать — Python работает прямо на странице.
+    </p>
+    <div class="stats">
+      <span><b id="stat-lessons">0</b>уроков</span>
+      <span><b id="stat-tasks">0</b>задач и вопросов</span>
+      <span>Работает офлайн после первой загрузки</span>
+    </div>
+  </div>
+</header>
+
+<main id="modules"></main>
+
+<footer class="foot">
+  Python для начинающих · курс-тренажёр · прогресс сохраняется локально в браузере
+</footer>
+
+<script>
+/* ============================================================
+   ДАННЫЕ КУРСА
+   Чтобы добавить урок — допишите объект в lessons.
+   Поля:
+     id        — уникальный ключ (совпадает с ключом прогресса урока)
+     num       — номер урока как показывается на карточке ("1.2")
+     title     — заголовок
+     desc      — короткое описание
+     href      — ссылка на страницу урока (файл .html)
+     available — true/false (готов ли урок)
+     items     — сколько всего заданий в уроке (вопросы + задачи)
+   ============================================================ */
+const COURSE = [
+  {
+    module: "Модуль 1",
+    title: "Ввод и вывод данных",
+    desc: "Первые программы, print(), input() и переменные.",
+    lessons: [
+      {
+        id: "lesson-1-1",
+        num: "1.1",
+        title: "Знакомство с Python",
+        desc: "Команды print() и input(), первые программы.",
+        href: "lesson-1-1.html",
+        available: true,
+        items: 12
+      },
+      {
+        id: "lesson-1-2",
+        num: "1.2",
+        title: "Параметры sep и end",
+        desc: "Управляем разделителями и завершением строки в print().",
+        href: "lesson-1-2.html",
+        available: true,
+        items: 12
+      },
+      {
+        id: "lesson-1-3",
+        num: "1.3",
+        title: "Переменные и PEP 8",
+        desc: "Как называть переменные и правильно оформлять код.",
+        href: "lesson-1-3.html",
+        available: false,
+        items: 0
+      },
+      {
+        id: "lesson-1-4",
+        num: "1.4",
+        title: "Целочисленная арифметика",
+        desc: "Сложение, вычитание, умножение, деление и остаток.",
+        href: "lesson-1-4.html",
+        available: false,
+        items: 0
+      }
+    ]
+  },
+  {
+    module: "Модуль 2",
+    title: "Условный оператор",
+    desc: "Ветвления, сравнения и логические операции.",
+    lessons: [
+      {
+        id: "lesson-2-1",
+        num: "2.1",
+        title: "Выбор из двух",
+        desc: "Операторы if и else, сравнения.",
+        href: "lesson-2-1.html",
+        available: false,
+        items: 0
+      },
+      {
+        id: "lesson-2-2",
+        num: "2.2",
+        title: "Логические операции",
+        desc: "and, or, not и приоритет операций.",
+        href: "lesson-2-2.html",
+        available: false,
+        items: 0
+      },
+      {
+        id: "lesson-2-3",
+        num: "2.3",
+        title: "Вложенные условия",
+        desc: "Каскадные и вложенные if.",
+        href: "lesson-2-3.html",
+        available: false,
+        items: 0
+      }
+    ]
+  }
+];
+
+/* ============================================================
+   ПРОГРЕСС ИЗ localStorage
+   Каждый урок пишет свой прогресс под ключом "<id>-progress".
+   ============================================================ */
+function getLessonProgress(lesson) {
+  if (!lesson.available || !lesson.items) return null;
+  try {
+    const raw = localStorage.getItem(lesson.id + '-progress');
+    if (!raw) return { solved: 0, total: lesson.items };
+    const data = JSON.parse(raw);
+    const solved = Object.keys(data).filter(k => data[k] === 'solved').length;
+    return { solved, total: lesson.items };
+  } catch (_) {
+    return { solved: 0, total: lesson.items };
+  }
+}
+
+/* ============================================================
+   РЕНДЕР
+   ============================================================ */
+function renderCourse() {
+  const wrap = document.getElementById('modules');
+  wrap.innerHTML = '';
+  let totalLessons = 0;
+  let totalItems = 0;
+
+  COURSE.forEach(mod => {
+    const modEl = document.createElement('section');
+    modEl.className = 'module';
+
+    const head = document.createElement('div');
+    head.className = 'module-head';
+    head.innerHTML = `
+      <span class="mod-num">${mod.module}</span>
+      <h2>${mod.title}</h2>
+    `;
+    modEl.appendChild(head);
+
+    const desc = document.createElement('p');
+    desc.className = 'module-desc';
+    desc.textContent = mod.desc;
+    modEl.appendChild(desc);
+
+    const list = document.createElement('div');
+    list.className = 'lesson-list';
+
+    mod.lessons.forEach(lesson => {
+      if (lesson.available) {
+        totalLessons++;
+        totalItems += lesson.items || 0;
+      }
+      list.appendChild(buildLessonCard(lesson));
+    });
+
+    modEl.appendChild(list);
+    wrap.appendChild(modEl);
+  });
+
+  document.getElementById('stat-lessons').textContent = totalLessons;
+  document.getElementById('stat-tasks').textContent = totalItems;
+}
+
+function buildLessonCard(lesson) {
+  const progress = getLessonProgress(lesson);
+
+  const a = document.createElement(lesson.available ? 'a' : 'div');
+  a.className = 'lesson ' + (lesson.available ? 'available' : 'soon');
+  if (lesson.available) {
+    a.href = lesson.href;
+  } else {
+    a.setAttribute('aria-disabled', 'true');
+    a.title = 'Урок ещё готовится';
+  }
+
+  let statusHtml = '';
+  if (lesson.available) {
+    if (progress && progress.solved === progress.total) {
+      statusHtml = `<span class="lesson-status ready"><span class="dot"></span>пройден</span>`;
+    } else {
+      statusHtml = `<span class="lesson-status"><span class="dot" style="background:var(--accent)"></span>готов</span>`;
+    }
+  } else {
+    statusHtml = `<span class="lesson-status"><span class="dot" style="background:#c9cfdb"></span>скоро</span>`;
+  }
+
+  let bottomHtml = '';
+  if (lesson.available && progress) {
+    const pct = progress.total ? Math.round(progress.solved / progress.total * 100) : 0;
+    bottomHtml = `
+      <span class="progress-mini">
+        <span class="bar"><i style="width:${pct}%"></i></span>
+        <span>${progress.solved} / ${progress.total}</span>
+      </span>
+      <span class="arrow">→</span>
+    `;
+  } else if (lesson.available) {
+    bottomHtml = `<span>Открыть урок</span><span class="arrow">→</span>`;
+  } else {
+    bottomHtml = `<span>В разработке</span><span class="arrow">…</span>`;
+  }
+
+  a.innerHTML = `
+    <div class="lesson-top">
+      <span class="lesson-tag">${lesson.num}</span>
+      ${statusHtml}
+    </div>
+    <h3>${lesson.title}</h3>
+    <p>${lesson.desc}</p>
+    <div class="lesson-bottom">${bottomHtml}</div>
+  `;
+
+  return a;
+}
+
+/* Обновление прогресса при возврате на вкладку — например,
+   когда пользователь прошёл урок и вернулся назад. */
+window.addEventListener('focus', () => renderCourse());
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) renderCourse();
+});
+
+renderCourse();
+</script>
+</body>
+</html>
