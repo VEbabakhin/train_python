@@ -344,12 +344,23 @@
   .task h3 {
     margin: 0 0 8px;
     display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap;
   }
   .task h3 .check {
     margin-left: auto;
     font-size: 12px;
     color: var(--accent-2);
     font-weight: 600;
+  }
+  .task h3 .tests-badge {
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    background: #eef1f7;
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.02em;
   }
   .task .desc { margin: 6px 0 12px; }
   .task .sample {
@@ -411,15 +422,49 @@
     margin: 0 auto 14px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  #loader .loader-box {
+    text-align: center;
+    max-width: 420px;
+    padding: 0 20px;
+  }
+  #loader .loader-text {
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  #loader .loader-hint {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 10px;
+    display: none;
+  }
+  #loader .loader-retry {
+    display: none;
+    margin-top: 16px;
+    padding: 9px 22px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  #loader .loader-retry:hover { background: #2e59d9; }
+  #loader.error .spinner { display: none; }
+  #loader.error .loader-hint { display: block; }
+  #loader.error .loader-retry { display: inline-block; }
 </style>
 </head>
 <body>
 
 <div id="loader">
-  <div style="text-align:center">
+  <div class="loader-box">
     <div class="spinner"></div>
-    <div id="loader-text">Загружаем Python в браузер…</div>
-    <div class="muted" style="font-size:12px;margin-top:6px">первый раз ~10 МБ, дальше из кеша</div>
+    <div class="loader-text" id="loader-text">Загружаем Python…</div>
+    <div class="loader-hint" id="loader-hint"></div>
+    <button class="loader-retry" onclick="location.reload()">Обновить страницу</button>
   </div>
 </div>
 
@@ -502,7 +547,7 @@
       <div id="ex4"></div>
       <p class="muted" style="font-size:13px">В поле ниже введи своё имя и нажми «Запустить».</p>
       <label class="small">Входные данные для input()</label>
-      <input class="input-line" data-input="ex4" placeholder="например: Иван">
+      <input class="input-line" data-input="ex4" value="Иван">
       <div class="btnrow">
         <button class="primary" data-run="ex4" disabled>▶ Запустить</button>
       </div>
@@ -522,21 +567,6 @@
     </div>
   </section>
 
-  <section>
-    <h2><span class="num">4</span>Песочница</h2>
-    <div class="card">
-      <p>Пиши любой код и запускай. Если используешь <code class="inline">input()</code>, впиши значения в поле ниже — по одному на строку.</p>
-      <div id="playground"></div>
-      <label class="small">Входные данные (по одному значению на строку)</label>
-      <textarea class="input-line" id="pg-input" rows="3" placeholder="например:&#10;Иван&#10;Москва"></textarea>
-      <div class="btnrow">
-        <button class="primary" id="pg-run" disabled>▶ Запустить</button>
-        <button id="pg-clear">Очистить вывод</button>
-      </div>
-      <div class="io-panel" id="pg-out"><span class="dim">— вывод появится здесь —</span></div>
-    </div>
-  </section>
-
   <div class="stage-banner practice">
     <div class="stage-num">①</div>
     <div>
@@ -551,7 +581,7 @@
     <div class="stage-num">②</div>
     <div>
       <h2>Этап 2. Задачи на код</h2>
-      <p class="sub">Напиши код, запусти и нажми «Проверить». Ответ сверяется символ в символ (пробелы в конце строк не учитываются).</p>
+      <p class="sub">Напиши код, запусти и нажми «Проверить». Каждая задача проходит несколько тестов — в примере показан только первый.</p>
     </div>
   </div>
 
@@ -574,44 +604,103 @@ let pyReady = false;
 const statusPill = document.getElementById('status-pill');
 const loader = document.getElementById('loader');
 const loaderText = document.getElementById('loader-text');
+const loaderHint = document.getElementById('loader-hint');
+
+function showLoadError(msg) {
+  statusPill.className = 'pill warn';
+  statusPill.textContent = 'Ошибка загрузки';
+  loader.classList.add('error');
+  loaderText.textContent = 'Не удалось загрузить Python';
+  loaderHint.textContent = msg + ' Попробуй обновить страницу или проверить подключение к интернету.';
+}
 
 async function initPython() {
+  if (typeof loadPyodide !== 'function') {
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  if (typeof loadPyodide !== 'function') {
+    showLoadError('Скрипт Pyodide не загрузился.');
+    return;
+  }
+
+  let timeoutId = null;
   try {
-    pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" });
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(
+        () => reject(new Error('Превышено время ожидания. Возможно, CDN недоступен.')),
+        60000
+      );
+    });
+
+    pyodide = await Promise.race([
+      loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" }),
+      timeoutPromise
+    ]);
+
+    clearTimeout(timeoutId);
     pyReady = true;
     statusPill.className = 'pill ok';
     statusPill.textContent = 'Python готов';
     loader.classList.add('hidden');
     document.querySelectorAll('button[data-run]').forEach(b => b.disabled = false);
-    document.getElementById('pg-run').disabled = false;
     document.querySelectorAll('button[data-taskrun]').forEach(b => b.disabled = false);
     document.querySelectorAll('button[data-check]').forEach(b => b.disabled = false);
   } catch (e) {
-    statusPill.className = 'pill warn';
-    statusPill.textContent = 'Ошибка загрузки';
-    loaderText.textContent = 'Не удалось загрузить Pyodide: ' + e.message;
+    clearTimeout(timeoutId);
+    showLoadError((e && e.message) ? e.message : String(e));
   }
 }
 
 async function runPython(code, inputs = []) {
   if (!pyReady) throw new Error('Python ещё загружается, подожди пару секунд…');
-  let stdout = '';
-  pyodide.setStdout({ batched: (s) => { stdout += s + '\n'; } });
-  pyodide.setStderr({ batched: (s) => { stdout += s + '\n'; } });
-  let idx = 0;
-  const inArr = inputs.slice();
-  pyodide.setStdin({ stdin: () => (idx < inArr.length ? inArr[idx++] + '\n' : null) });
+
+  const codeJson = JSON.stringify(code);
+  const inputsJson = JSON.stringify(inputs);
+
+  const wrapper = `
+import sys as _sys, io as _io, builtins as _bt
+__user_stdout = _io.StringIO()
+__old_stdout = _sys.stdout
+_sys.stdout = __user_stdout
+
+__user_inputs = ${inputsJson}
+__user_input_idx = [0]
+def __fake_input(prompt=''):
+    if __user_input_idx[0] < len(__user_inputs):
+        v = __user_inputs[__user_input_idx[0]]
+        __user_input_idx[0] += 1
+        return v
+    return ''
+__old_input = _bt.input
+_bt.input = __fake_input
+
+__user_error = None
+try:
+    exec(compile(${codeJson}, '<user_code>', 'exec'), {'__name__': '__main__'})
+except BaseException as __e:
+    __user_error = type(__e).__name__ + ': ' + str(__e)
+finally:
+    _sys.stdout = __old_stdout
+    _bt.input = __old_input
+
+__user_result = __user_stdout.getvalue()
+if __user_error:
+    if __user_result and not __user_result.endswith('\\n'):
+        __user_result += '\\n'
+    __user_result += __user_error
+`;
+
   const freshGlobals = pyodide.globals.get('dict')();
   try {
-    await pyodide.runPythonAsync(code, { globals: freshGlobals });
+    await pyodide.runPythonAsync(wrapper, { globals: freshGlobals });
+    let out = freshGlobals.get('__user_result');
+    if (out === undefined || out === null) out = '';
+    return String(out);
   } catch (e) {
-    const msg = (e && e.message) ? e.message : String(e);
-    stdout += (stdout ? '\n' : '') + msg;
+    return (e && e.message) ? e.message : String(e);
   } finally {
     try { freshGlobals.destroy(); } catch (_) {}
-    pyodide.setStdin({ stdin: () => null });
   }
-  return stdout;
 }
 
 /* ================= Утилиты ================= */
@@ -642,8 +731,11 @@ function clearOutput(el) {
   el.classList.remove('error');
 }
 function showOutput(el, text, isError = false) {
-  if (!text || !text.length) el.innerHTML = '<span class="dim">(пустой вывод)</span>';
-  else el.textContent = text.replace(/\n+$/, '');
+  if (text === undefined || text === null || text === '') {
+    el.innerHTML = '<span class="dim">(пустой вывод)</span>';
+  } else {
+    el.textContent = text.replace(/\n+$/, '');
+  }
   el.classList.toggle('error', isError);
 }
 function escapeHtml(s) {
@@ -721,27 +813,8 @@ document.querySelectorAll('button[data-run]').forEach(btn => {
   });
 });
 
-/* ================= Песочница ================= */
-const pgEditor = makeEditor(document.getElementById('playground'),
-  'name = input()\nprint("Привет,", name)');
-const pgOut = document.getElementById('pg-out');
-const pgInput = document.getElementById('pg-input');
-document.getElementById('pg-run').addEventListener('click', async () => {
-  const inputs = pgInput.value
-    ? pgInput.value.replace(/\r\n/g,'\n').split('\n').filter(s => s.length > 0)
-    : [];
-  pgOut.innerHTML = '<span class="dim">Выполняется…</span>';
-  try {
-    const out = await runPython(pgEditor.getValue(), inputs);
-    showOutput(pgOut, out);
-  } catch (e) {
-    showOutput(pgOut, e.message, true);
-  }
-});
-document.getElementById('pg-clear').addEventListener('click', () => clearOutput(pgOut));
-
 /* ============================================================
-   ЭТАП 1. ВОПРОСЫ ПО ТЕОРИИ
+   ЭТАП 1. ВОПРОСЫ ПО ТЕОРИИ (6)
    ============================================================ */
 const QUIZ_ITEMS = {
   q1: {
@@ -906,53 +979,68 @@ function renderQuiz() {
 }
 
 /* ============================================================
-   ЭТАП 2. ЗАДАЧИ НА КОД
+   ЭТАП 2. ЗАДАЧИ НА КОД (6, у каждой — массив tests)
    ============================================================ */
 const TASKS = [
   {
     id: 't1', title: 'Задача 1. Привет, мир!',
-    desc: 'Напиши программу, которая выводит на экран ровно одну строку:',
-    sample: 'Привет, мир!', input: [], expected: 'Привет, мир!',
+    desc: 'Выведи на экран ровно одну строку: «Привет, мир!».',
+    tests: [
+      { input: [], expected: 'Привет, мир!' }
+    ],
     hint: 'Используй print() с текстом в кавычках.',
     starter: ''
   },
   {
     id: 't2', title: 'Задача 2. Три строки',
-    desc: 'Выведи три строки друг под другом:',
-    sample: 'Python\nэто\nкруто', input: [], expected: 'Python\nэто\nкруто',
+    desc: 'Выведи три строки друг под другом: Python, это, круто.',
+    tests: [
+      { input: [], expected: 'Python\nэто\nкруто' }
+    ],
     hint: 'Три отдельных вызова print(), каждый со своим текстом.',
     starter: ''
   },
   {
     id: 't3', title: 'Задача 3. Приветствие по имени',
-    desc: 'Программа читает имя (одна строка) и выводит приветствие.',
-    sample: 'Ввод:\nИван\n\nВывод:\nПривет, Иван',
-    input: ['Иван'], expected: 'Привет, Иван',
+    desc: 'На вход подаётся имя. Выведи приветствие «Привет, Имя».',
+    tests: [
+      { input: ['Аня'], expected: 'Привет, Аня' },
+      { input: ['Иван'], expected: 'Привет, Иван' },
+      { input: ['Пётр'], expected: 'Привет, Пётр' }
+    ],
     hint: 'Сначала name = input(), потом print("Привет,", name).',
     starter: ''
   },
   {
     id: 't4', title: 'Задача 4. Привет и пока',
-    desc: 'Прочитай имя и выведи две строки: приветствие и прощание.',
-    sample: 'Ввод:\nАня\n\nВывод:\nПривет, Аня\nПока, Аня',
-    input: ['Аня'], expected: 'Привет, Аня\nПока, Аня',
+    desc: 'На вход подаётся имя. Выведи две строки: приветствие и прощание.',
+    tests: [
+      { input: ['Аня'], expected: 'Привет, Аня\nПока, Аня' },
+      { input: ['Иван'], expected: 'Привет, Иван\nПока, Иван' },
+      { input: ['Маша'], expected: 'Привет, Маша\nПока, Маша' }
+    ],
     hint: 'Имя читается один раз. Оба print() используют одну и ту же переменную.',
     starter: ''
   },
   {
     id: 't5', title: 'Задача 5. Любимые вещи',
-    desc: 'Программа читает три строки: любимая еда, любимый напиток и любимый десерт. Затем выводит три строки в формате ниже.',
-    sample: 'Ввод:\nПицца\nЧай\nТирамису\n\nВывод:\nЕда: Пицца\nНапиток: Чай\nДесерт: Тирамису',
-    input: ['Пицца', 'Чай', 'Тирамису'],
-    expected: 'Еда: Пицца\nНапиток: Чай\nДесерт: Тирамису',
+    desc: 'На вход подаются три строки: любимая еда, любимый напиток и любимый десерт. Выведи три строки с подписями.',
+    tests: [
+      { input: ['Пицца', 'Чай', 'Тирамису'], expected: 'Еда: Пицца\nНапиток: Чай\nДесерт: Тирамису' },
+      { input: ['Борщ', 'Квас', 'Мёд'], expected: 'Еда: Борщ\nНапиток: Квас\nДесерт: Мёд' },
+      { input: ['Суп', 'Кофе', 'Мороженое'], expected: 'Еда: Суп\nНапиток: Кофе\nДесерт: Мороженое' }
+    ],
     hint: 'Три input() в три разные переменные. Потом три print(): подпись, двоеточие и значение через запятую.',
     starter: ''
   },
   {
     id: 't6', title: 'Задача 6. Имя трижды',
-    desc: 'Прочитай имя и выведи его три раза, каждое с новой строки.',
-    sample: 'Ввод:\nАня\n\nВывод:\nАня\nАня\nАня',
-    input: ['Аня'], expected: 'Аня\nАня\nАня',
+    desc: 'На вход подаётся имя. Выведи его три раза, каждое с новой строки.',
+    tests: [
+      { input: ['Аня'], expected: 'Аня\nАня\nАня' },
+      { input: ['Иван'], expected: 'Иван\nИван\nИван' },
+      { input: ['Маша'], expected: 'Маша\nМаша\nМаша' }
+    ],
     hint: 'Имя читается один раз. Дальше три print(name).',
     starter: ''
   }
@@ -965,13 +1053,25 @@ function buildTaskCard(task) {
   const solved = progress[task.id] === 'solved';
   if (solved) card.classList.add('done');
 
+  const firstTest = task.tests[0];
+  const sampleLines = [];
+  if (firstTest.input.length) {
+    sampleLines.push('Ввод:');
+    sampleLines.push(...firstTest.input);
+    sampleLines.push('');
+  }
+  sampleLines.push('Вывод:');
+  sampleLines.push(firstTest.expected);
+  const sampleText = sampleLines.join('\n');
+
   card.innerHTML = `
     <h3>
       <span>${escapeHtml(task.title)}</span>
+      <span class="tests-badge">Тестов: ${task.tests.length}</span>
       <span class="check" data-checkmark>${solved ? '✓ решено' : ''}</span>
     </h3>
     <p class="desc">${escapeHtml(task.desc)}</p>
-    <div class="sample">${escapeHtml(task.sample)}</div>
+    <div class="sample">${escapeHtml(sampleText)}</div>
     <div data-editor></div>
     <div class="btnrow">
       <button class="primary" data-taskrun disabled>▶ Запустить</button>
@@ -987,45 +1087,59 @@ function buildTaskCard(task) {
   const outEl = card.querySelector('[data-taskout]');
   const msgEl = card.querySelector('[data-msg]');
 
+  // ▶ Запустить — прогон на первом тесте
   card.querySelector('[data-taskrun]').addEventListener('click', async () => {
     outEl.innerHTML = '<span class="dim">Выполняется…</span>';
     try {
-      const out = await runPython(cm.getValue(), task.input);
+      const out = await runPython(cm.getValue(), firstTest.input);
       showOutput(outEl, out);
     } catch (e) {
       showOutput(outEl, e.message, true);
     }
   });
 
+  // Проверить — все тесты, показываем счётчик
   card.querySelector('[data-check]').addEventListener('click', async () => {
     msgEl.innerHTML = '';
     outEl.innerHTML = '<span class="dim">Проверяется…</span>';
-    let out;
-    try {
-      out = await runPython(cm.getValue(), task.input);
-    } catch (e) {
-      showOutput(outEl, e.message, true);
-      msgEl.innerHTML = `<div class="msg err">Ошибка запуска: ${escapeHtml(e.message)}</div>`;
-      return;
-    }
-    showOutput(outEl, out);
-    const got = normalize(out);
-    const want = normalize(task.expected);
 
-    if (got === want) {
+    const code = cm.getValue();
+    const total = task.tests.length;
+    let passed = 0;
+    let lastOutput = '';
+    let firstFailedOutput = null;
+
+    for (let i = 0; i < total; i++) {
+      const t = task.tests[i];
+      let out;
+      try {
+        out = await runPython(code, t.input);
+      } catch (e) {
+        showOutput(outEl, e.message, true);
+        msgEl.innerHTML = `<div class="msg err">Ошибка запуска</div>`;
+        return;
+      }
+      lastOutput = out;
+      const got = normalize(out);
+      const want = normalize(t.expected);
+      if (got === want) {
+        passed++;
+      } else if (firstFailedOutput === null) {
+        firstFailedOutput = out;
+      }
+    }
+
+    if (passed === total) {
+      showOutput(outEl, lastOutput);
       card.classList.add('done');
       card.querySelector('[data-checkmark]').textContent = '✓ решено';
       progress[task.id] = 'solved';
       saveProgress(progress);
       updateProgressUI();
-      msgEl.innerHTML = `<div class="msg ok">Верно! Задача решена ✅</div>`;
+      msgEl.innerHTML = `<div class="msg ok">Тестов пройдено: ${passed} из ${total}</div>`;
     } else {
-      msgEl.innerHTML = `
-        <div class="msg err">
-          Не совпадает.<br>
-          Ожидалось:<br><span class="mono">${escapeHtml(want)}</span><br>
-          Получилось:<br><span class="mono">${escapeHtml(got) || '(пусто)'}</span>
-        </div>`;
+      showOutput(outEl, firstFailedOutput, true);
+      msgEl.innerHTML = `<div class="msg err">Тестов пройдено: ${passed} из ${total}</div>`;
     }
   });
 
