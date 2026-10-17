@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Урок 1.3 — Параметры sep и end</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --ink: #1c2333;
+    --muted: #5b6478;
+    --accent: #3b6ef5;
+    --accent-2: #22a06b;
+    --danger: #d64545;
+    --border: #e3e7ef;
+  }
+  * { box-sizing: border-box; }
+  html {
+    margin: 0; padding: 0;
+    scroll-behavior: smooth;
+    scroll-padding-top: 130px;
+  }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 16px;
+  }
+
+  .sticky-top {
+    position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 1px 0 var(--border);
+  }
+
+  header.top {
+    background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex; align-items: center; gap: 16px;
+    flex-wrap: wrap;
+  }
+  header.top .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #eef2ff;
+    color: var(--accent);
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .15s ease;
+    flex-shrink: 0;
+  }
+  header.top .back-link:hover { background: #dde5ff; }
+  header.top .back-link svg { width: 14px; height: 14px; }
+  header.top .crumb { color: var(--muted); font-size: 14px; }
+  header.top .grow { flex: 1; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #eef2ff; color: var(--accent);
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+  }
+  .pill.warn { background: #fff2e8; color: #c2560f; }
+  .pill.ok { background: #e6f7ee; color: var(--accent-2); }
+  .pill.neutral { background: #eef1f7; color: var(--muted); }
+
+  nav.lesson-nav {
+    background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  nav.lesson-nav::-webkit-scrollbar { height: 6px; }
+  nav.lesson-nav::-webkit-scrollbar-thumb { background: #cfd5e2; border-radius: 3px; }
+
+  .nav-theory {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: background .15s ease;
+  }
+  .nav-theory:hover { background: #2e59d9; }
+  .nav-theory svg { width: 15px; height: 15px; }
+
+  .nav-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: #f2f5fb;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+  .nav-group-label {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 4px;
+    padding-left: 2px;
+  }
+  .nav-item {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-grid;
+    place-items: center;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: all .15s ease;
+    user-select: none;
+    background: #fff;
+    border: 1.5px solid #e1e6ef;
+    color: #4a5568;
+    font-family: ui-monospace, monospace;
+  }
+  .nav-item:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .nav-item.solved {
+    background: var(--accent-2);
+    border-color: var(--accent-2);
+    color: #fff;
+  }
+  .nav-item.failed {
+    background: #eceff5;
+    border-color: #cdd3df;
+    color: #8b93a4;
+  }
+
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 28px 20px 80px;
+  }
+
+  section { margin-bottom: 40px; }
+  h2 {
+    font-size: 22px; margin: 32px 0 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num {
+    background: var(--accent); color: #fff;
+    width: 28px; height: 28px; border-radius: 8px;
+    display: inline-grid; place-items: center;
+    font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  h3 { font-size: 17px; margin: 20px 0 8px; }
+  p { margin: 8px 0 12px; }
+  .muted { color: var(--muted); }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 14px 0;
+  }
+
+  code.inline {
+    background: #eef1f7;
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.92em;
+  }
+
+  .CodeMirror {
+    height: auto;
+    min-height: 60px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+  }
+  .CodeMirror-lines { padding: 8px 0; }
+
+  .btnrow {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin: 8px 0 6px;
+  }
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--ink);
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all .15s ease;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.primary {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  button.primary:hover { background: #2e59d9; color: #fff; }
+  button.success {
+    background: var(--accent-2); border-color: var(--accent-2); color: #fff;
+  }
+  button.success:hover { background: #1a8557; color: #fff; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+
+  .io-panel {
+    background: #0f1220;
+    color: #e6e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+    white-space: pre-wrap;
+    min-height: 44px;
+    margin: 8px 0;
+    border: 1px solid #1f2437;
+  }
+  .io-panel.error { color: #ff9c9c; }
+  .io-panel .dim { color: #7b8296; }
+
+  label.small {
+    display: block; font-size: 12px; color: var(--muted);
+    margin: 10px 0 4px; text-transform: uppercase; letter-spacing: .04em;
+  }
+  input.input-line,
+  textarea.input-line {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font: inherit;
+    font-family: ui-monospace, monospace;
+    font-size: 14px;
+    background: #fff;
+    resize: vertical;
+  }
+
+  .stage-banner {
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 30px 0 18px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .stage-banner.practice { background: linear-gradient(135deg, #e6f7ee, #d6f0e1); }
+  .stage-banner .stage-num {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 20px; font-weight: 700; color: #fff;
+    background: var(--accent-2);
+    flex-shrink: 0;
+  }
+  .stage-banner h2 { margin: 0; font-size: 20px; }
+  .stage-banner .sub { color: var(--muted); font-size: 14px; margin: 2px 0 0; }
+
+  .quiz {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 14px 0;
+    scroll-margin-top: 130px;
+  }
+  .quiz.solved { border-left: 4px solid var(--accent-2); }
+  .quiz.failed { border-left: 4px solid #a0a8b8; }
+  .quiz .q-num {
+    font-size: 12px; font-weight: 700;
+    color: var(--accent); text-transform: uppercase; letter-spacing: .05em;
+  }
+  .quiz .q-text { font-size: 16px; margin: 4px 0 12px; }
+  .quiz pre {
+    background: #0f1220; color: #e6e8f0;
+    border-radius: 8px; padding: 10px 14px;
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    overflow-x: auto;
+    margin: 8px 0 12px;
+    white-space: pre;
+  }
+  .quiz .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 14px;
+    margin: 6px 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .12s;
+  }
+  .quiz .opt:hover { border-color: var(--accent); background: #f7f9ff; }
+  .quiz .opt input {
+    margin: 3px 0 0 0;
+    flex-shrink: 0;
+  }
+  .quiz .opt .opt-text {
+    flex: 1;
+    font-family: ui-monospace, monospace;
+    font-size: 13.5px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .quiz .opt.correct { border-color: var(--accent-2); background: #e6f7ee; }
+  .quiz .opt.wrong { border-color: var(--danger); background: #fdeaea; }
+  .quiz .opt.disabled { pointer-events: none; opacity: 0.9; }
+
+  .task {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 18px 0;
+    scroll-margin-top: 130px;
+  }
+  .task.done { border-left-color: var(--accent-2); }
+  .task h3 {
+    margin: 0 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .task h3 .check {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--accent-2);
+    font-weight: 600;
+  }
+  .task .desc { margin: 6px 0 12px; }
+  .task .sample {
+    background: #f4f6fb;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    margin: 8px 0;
+    white-space: pre-wrap;
+  }
+
+  .msg {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .msg.ok { background: #e6f7ee; color: #146c43; border: 1px solid #bfe5d1; }
+  .msg.err { background: #fdeaea; color: #9c2b2b; border: 1px solid #f5c3c3; }
+  .msg.hint { background: #fff8e1; color: #7a5a00; border: 1px solid #f0d98a; }
+  .msg .mono {
+    font-family: ui-monospace, monospace;
+    background: rgba(0,0,0,0.05);
+    padding: 2px 6px; border-radius: 4px;
+    white-space: pre-wrap;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: #e3e7ef;
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 8px 0 4px;
+  }
+  .progress-bar > div {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    width: 0%;
+    transition: width .4s ease;
+  }
+
+  #loader {
+    position: fixed; inset: 0;
+    background: rgba(246,247,251,0.95);
+    display: grid; place-items: center;
+    z-index: 100;
+    transition: opacity .3s ease;
+  }
+  #loader.hidden { opacity: 0; pointer-events: none; }
+  .spinner {
+    width: 42px; height: 42px;
+    border: 4px solid #dfe4ee;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div style="text-align:center">
+    <div class="spinner"></div>
+    <div id="loader-text">Загружаем Python в браузер…</div>
+    <div class="muted" style="font-size:12px;margin-top:6px">первый раз ~10 МБ, дальше из кеша</div>
+  </div>
+</div>
+
+<div class="sticky-top">
+  <header class="top">
+    <a href="index.html" class="back-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+      </svg>
+      К курсу
+    </a>
+    <span class="crumb">Модуль 1 · Урок 1.3</span>
+    <span class="pill neutral" id="progress-pill">Решено: 0 / 12</span>
+    <div class="grow"></div>
+    <span id="status-pill" class="pill warn">Инициализация…</span>
+  </header>
+  <nav class="lesson-nav" id="lesson-nav">
+    <a href="#theory" class="nav-theory">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+      Теория
+    </a>
+  </nav>
+</div>
+
+<main>
+
+  <h1 id="theory" style="font-size:26px;margin:8px 0 6px">Параметры <code class="inline">sep</code> и <code class="inline">end</code></h1>
+
+  <section>
+    <h2><span class="num">1</span>Зачем нужны параметры</h2>
+    <div class="card">
+      <p>В уроке 1.1 мы видели, что <code class="inline">print()</code> выводит несколько значений через пробел и всегда завершает вывод переводом строки. Это поведение по умолчанию, но его можно изменить.</p>
+      <p>Для этого у <code class="inline">print()</code> есть два необязательных параметра: <code class="inline">sep</code> и <code class="inline">end</code>.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span>Параметр <code class="inline">sep</code></h2>
+
+    <div class="card">
+      <p><b>sep</b> (от англ. separator — разделитель) задаёт, что печатать <b>между</b> значениями. По умолчанию это пробел.</p>
+      <p>Пример: выведем три слова через дефис.</p>
+      <div id="ex1"></div>
+      <div class="btnrow">
+        <button class="primary" data-run="ex1" disabled>▶ Запустить</button>
+      </div>
+      <div class="io-panel" data-out="ex1"><span class="dim">— вывод появится здесь —</span></div>
+    </div>
+
+    <div class="card">
+      <p>Если указать <code class="inline">sep=""</code> (пустая строка), значения напечатаются вплотную друг к другу:</p>
+      <div id="ex2"></div>
+      <div class="btnrow">
+        <button class="primary" data-run="ex2" disabled>▶ Запустить</button>
+      </div>
+      <div class="io-panel" data-out="ex2"><span class="dim">— вывод появится здесь —</span></div>
+    </div>
+
+    <div class="card">
+      <p>Разделителем может быть любая строка: запятая, точка, несколько символов.</p>
+      <div id="ex3"></div>
+      <div class="btnrow">
+        <button class="primary" data-run="ex3" disabled>▶ Запустить</button>
+      </div>
+      <div class="io-panel" data-out="ex3"><span class="dim">— вывод появится здесь —</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span>Параметр <code class="inline">end</code></h2>
+
+    <div class="card">
+      <p><b>end</b> задаёт, что печатать <b>после</b> последнего значения. По умолчанию это перевод строки (<code class="inline">\n</code>), поэтому каждый <code class="inline">print()</code> начинает новую строку.</p>
+      <p>Если указать <code class="inline">end=" "</code>, следующий <code class="inline">print()</code> продолжит ту же строку.</p>
+      <div id="ex4"></div>
+      <div class="btnrow">
+        <button class="primary" data-run="ex4" disabled>▶ Запустить</button>
+      </div>
+      <div class="io-panel" data-out="ex4"><span class="dim">— вывод появится здесь —</span></div>
+    </div>
+
+    <div class="card">
+      <p>Можно указать любой символ или строку в качестве завершения.</p>
+      <div id="ex5"></div>
+      <div class="btnrow">
+        <button class="primary" data-run="ex5" disabled>▶ Запустить</button>
+      </div>
+      <div class="io-panel" data-out="ex5"><span class="dim">— вывод появится здесь —</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">4</span>Комментарии и PEP 8</h2>
+
+    <div class="card">
+      <p><b>Комментарий</b> — это пояснение в коде, которое Python игнорирует. Он начинается с символа <code class="inline">#</code> и продолжается до конца строки.</p>
+      <div id="ex6"></div>
+      <div class="btnrow">
+        <button class="primary" data-run="ex6" disabled>▶ Запустить</button>
+      </div>
+      <div class="io-panel" data-out="ex6"><span class="dim">— вывод появится здесь —</span></div>
+    </div>
+
+    <div class="card">
+      <p>Несколько правил оформления кода (PEP 8), которые важно запомнить с самого начала:</p>
+      <ul>
+        <li>После запятой ставится пробел: <code class="inline">print("a", "b")</code>, а не <code class="inline">print("a","b")</code>.</li>
+        <li>Перед открывающей скобкой пробел не ставится: <code class="inline">print("привет")</code>, а не <code class="inline">print ("привет")</code>.</li>
+        <li>Вокруг знака <code class="inline">=</code> в присваивании ставятся пробелы: <code class="inline">name = input()</code>.</li>
+        <li>Имена переменных — латиница, цифры и <code class="inline">_</code>, начинать с цифры нельзя. Подробнее разбирали в уроке 1.2.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="stage-banner practice">
+    <div class="stage-num">①</div>
+    <div>
+      <h2>Этап 1. Вопросы по теории</h2>
+      <p class="sub">Ответь на вопросы — они проверяют, что ты понял теорию. Код запускать не нужно.</p>
+    </div>
+  </div>
+
+  <section id="quiz-container"></section>
+
+  <div class="stage-banner practice">
+    <div class="stage-num">②</div>
+    <div>
+      <h2>Этап 2. Задачи на код</h2>
+      <p class="sub">Напиши код, запусти и нажми «Проверить». Ответ сверяется символ в символ (пробелы в конце строк не учитываются).</p>
+    </div>
+  </div>
+
+  <section id="tasks-container"></section>
+
+  <div class="progress-bar"><div id="progress-fill"></div></div>
+  <p class="muted" id="progress-text">Прогресс: 0 из 12</p>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+
+<script>
+/* ================= Pyodide ================= */
+let pyodide = null;
+let pyReady = false;
+
+const statusPill = document.getElementById('status-pill');
+const loader = document.getElementById('loader');
+const loaderText = document.getElementById('loader-text');
+
+async function initPython() {
+  try {
+    pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" });
+    pyReady = true;
+    statusPill.className = 'pill ok';
+    statusPill.textContent = 'Python готов';
+    loader.classList.add('hidden');
+    document.querySelectorAll('button[data-run]').forEach(b => b.disabled = false);
+    document.querySelectorAll('button[data-taskrun]').forEach(b => b.disabled = false);
+    document.querySelectorAll('button[data-check]').forEach(b => b.disabled = false);
+  } catch (e) {
+    statusPill.className = 'pill warn';
+    statusPill.textContent = 'Ошибка загрузки';
+    loaderText.textContent = 'Не удалось загрузить Pyodide: ' + e.message;
+  }
+}
+
+async function runPython(code, inputs = []) {
+  if (!pyReady) throw new Error('Python ещё загружается, подожди пару секунд…');
+
+  const codeJson = JSON.stringify(code);
+  const inputsJson = JSON.stringify(inputs);
+
+  const wrapper = `
+import sys as _sys, io as _io, builtins as _bt
+__user_stdout = _io.StringIO()
+__old_stdout = _sys.stdout
+_sys.stdout = __user_stdout
+
+__user_inputs = ${inputsJson}
+__user_input_idx = [0]
+def __fake_input(prompt=''):
+    if __user_input_idx[0] < len(__user_inputs):
+        v = __user_inputs[__user_input_idx[0]]
+        __user_input_idx[0] += 1
+        return v
+    return ''
+__old_input = _bt.input
+_bt.input = __fake_input
+
+__user_error = None
+try:
+    exec(compile(${codeJson}, '<user_code>', 'exec'), {'__name__': '__main__'})
+except BaseException as __e:
+    __user_error = type(__e).__name__ + ': ' + str(__e)
+finally:
+    _sys.stdout = __old_stdout
+    _bt.input = __old_input
+
+__user_result = __user_stdout.getvalue()
+if __user_error:
+    if __user_result and not __user_result.endswith('\\n'):
+        __user_result += '\\n'
+    __user_result += __user_error
+`;
+
+  const freshGlobals = pyodide.globals.get('dict')();
+  try {
+    await pyodide.runPythonAsync(wrapper, { globals: freshGlobals });
+    let out = freshGlobals.get('__user_result');
+    if (out === undefined || out === null) out = '';
+    return String(out);
+  } catch (e) {
+    return (e && e.message) ? e.message : String(e);
+  } finally {
+    try { freshGlobals.destroy(); } catch (_) {}
+  }
+}
+
+/* ================= Утилиты ================= */
+function makeEditor(mountEl, initialCode) {
+  const ta = document.createElement('textarea');
+  ta.value = initialCode;
+  mountEl.appendChild(ta);
+  const cm = CodeMirror.fromTextArea(ta, {
+    mode: 'python',
+    theme: 'dracula',
+    lineNumbers: true,
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: false,
+    smartIndent: true,
+    lineWrapping: true,
+    extraKeys: {
+      Tab: (cm) => cm.replaceSelection('    ', 'end'),
+      'Shift-Tab': (cm) => cm.execCommand('indentLess')
+    }
+  });
+  cm.setSize('100%', 'auto');
+  setTimeout(() => cm.refresh(), 0);
+  return cm;
+}
+function clearOutput(el) {
+  el.innerHTML = '<span class="dim">— вывод появится здесь —</span>';
+  el.classList.remove('error');
+}
+function showOutput(el, text, isError = false) {
+  if (text === undefined || text === null || text === '') {
+    el.innerHTML = '<span class="dim">(пустой вывод)</span>';
+  } else {
+    el.textContent = text.replace(/\n+$/, '');
+  }
+  el.classList.toggle('error', isError);
+}
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function normalize(s) {
+  return String(s)
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map(line => line.replace(/\s+$/, ''))
+    .join('\n')
+    .replace(/\n+$/, '');
+}
+
+/* ================= Прогресс ================= */
+const STORAGE_KEY = 'lesson-1-3-progress';
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch (_) { return {}; }
+}
+function saveProgress(p) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); } catch (_) {}
+}
+const progress = loadProgress();
+const TOTAL_ITEMS = 12;
+
+function updateProgressUI() {
+  const solved = Object.keys(progress).filter(k => progress[k] === 'solved').length;
+  document.getElementById('progress-pill').textContent = `Решено: ${solved} / ${TOTAL_ITEMS}`;
+  document.getElementById('progress-fill').style.width = (solved / TOTAL_ITEMS * 100) + '%';
+  document.getElementById('progress-text').textContent = `Прогресс: ${solved} из ${TOTAL_ITEMS}`;
+  updateNav();
+}
+
+function updateNav() {
+  document.querySelectorAll('.nav-item[data-nav-q]').forEach(el => {
+    const id = el.dataset.navQ;
+    el.classList.toggle('solved', progress[id] === 'solved');
+    el.classList.toggle('failed', progress[id] === 'failed');
+  });
+  document.querySelectorAll('.nav-item[data-nav-t]').forEach(el => {
+    const id = el.dataset.navT;
+    el.classList.toggle('solved', progress[id] === 'solved');
+  });
+}
+
+/* ================= Примеры в теории ================= */
+const examples = {
+  ex1: { code: 'print("a", "b", "c", sep="-")' },
+  ex2: { code: 'print("a", "b", "c", sep="")' },
+  ex3: { code: 'print("2025", "09", "15", sep=".")' },
+  ex4: { code: 'print("Hello", end=" ")\nprint("World")' },
+  ex5: { code: 'print("Загрузка", end="...")\nprint("Готово")' },
+  ex6: { code: '# Это комментарий, Python его не выполняет.\nprint("Привет")  # и это тоже' }
+};
+
+const editors = {};
+for (const id in examples) {
+  editors[id] = makeEditor(document.getElementById(id), examples[id].code);
+}
+
+document.querySelectorAll('button[data-run]').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const id = btn.dataset.run;
+    const outEl = document.querySelector(`[data-out="${id}"]`);
+    const inputEl = document.querySelector(`[data-input="${id}"]`);
+    const inputs = inputEl && inputEl.value
+      ? inputEl.value.replace(/\r\n/g,'\n').split('\n').filter(s => s.length > 0)
+      : [];
+    outEl.innerHTML = '<span class="dim">Выполняется…</span>';
+    try {
+      const out = await runPython(editors[id].getValue(), inputs);
+      showOutput(outEl, out);
+    } catch (e) {
+      showOutput(outEl, e.message, true);
+    }
+  });
+});
+
+/* ============================================================
+   ЭТАП 1. ВОПРОСЫ ПО ТЕОРИИ (6)
+   ============================================================ */
+const QUIZ_ITEMS = {
+  q1: {
+    question: 'Что выведет этот код?',
+    code: 'print("a", "b", "c", sep="*")',
+    options: ['a b c', 'a*b*c', 'a,b,c', 'abc'],
+    correct: 1,
+    explain: 'sep="*" заменяет стандартный пробел на звёздочку. Получится a*b*c.'
+  },
+  q2: {
+    question: 'Что выведет этот код?',
+    code: 'print("a", "b", "c", sep="")',
+    options: ['a b c', 'a-b-c', 'abc', 'a, b, c'],
+    correct: 2,
+    explain: 'sep="" означает пустую строку между значениями. Они напечатаются вплотную: abc.'
+  },
+  q3: {
+    question: 'Что выведет этот код?',
+    code: 'print("Hello", end=" ")\nprint("World")',
+    options: ['Hello\nWorld', 'Hello World', 'HelloWorld', 'Hello\n World'],
+    correct: 1,
+    explain: 'end=" " отменяет перевод строки после первого print(). Второй print() продолжит ту же строку через пробел: Hello World.'
+  },
+  q4: {
+    question: 'Что делает параметр end по умолчанию?',
+    code: 'print("a")\nprint("b")',
+    options: ['Ничего', 'Добавляет пробел', 'Добавляет перевод строки', 'Добавляет точку'],
+    correct: 2,
+    explain: 'По умолчанию end="\\n" — перевод строки. Поэтому каждый print() начинает новую строку.'
+  },
+  q5: {
+    question: 'Что выведет этот код?',
+    code: 'print("Загрузка", end="...")\nprint("Готово")',
+    options: ['Загрузка\nГотово', 'Загрузка...Готово', 'Загрузка ... Готово', 'Загрузка...\nГотово'],
+    correct: 1,
+    explain: 'end="..." заменяет перевод строки на три точки. Второй print() продолжит строку сразу после них.'
+  },
+  q6: {
+    question: 'Какая строка оформлена по PEP 8 правильно?',
+    code: '',
+    options: [
+      'print ("Привет")',
+      'print( "Привет" )',
+      'print("Привет")',
+      'print("Привет");'
+    ],
+    correct: 2,
+    explain: 'Перед открывающей скобкой пробел не ставится. Лишние пробелы внутри скобок и точка с запятой тоже не нужны.'
+  }
+};
+
+const QUIZ_ORDER = Object.keys(QUIZ_ITEMS);
+
+function buildQuizCard(id, num) {
+  const q = QUIZ_ITEMS[id];
+  const state = progress[id];
+
+  const card = document.createElement('div');
+  card.className = 'quiz' + (state === 'solved' ? ' solved' : (state === 'failed' ? ' failed' : ''));
+  card.id = 'quiz-' + id;
+  card.dataset.attempts = state ? '2' : '0';
+
+  card.innerHTML = `
+    <div class="q-num">Вопрос ${num}</div>
+    <div class="q-text">${escapeHtml(q.question)}</div>
+    ${q.code ? `<pre>${escapeHtml(q.code)}</pre>` : ''}
+    <div class="opts"></div>
+    <div class="btnrow">
+      <button class="primary" data-qcheck>Проверить</button>
+      <button data-qreset>Сбросить</button>
+    </div>
+    <div data-qmsg></div>
+  `;
+
+  const optsWrap = card.querySelector('.opts');
+  q.options.forEach((opt, idx) => {
+    const label = document.createElement('label');
+    label.className = 'opt';
+    label.innerHTML = `<input type="radio" name="q-${id}" value="${idx}"><span class="opt-text">${escapeHtml(opt)}</span>`;
+    optsWrap.appendChild(label);
+  });
+
+  const labels = card.querySelectorAll('.opt');
+  const checkBtn = card.querySelector('[data-qcheck]');
+  const resetBtn = card.querySelector('[data-qreset]');
+  const msgEl = card.querySelector('[data-qmsg]');
+
+  if (state === 'solved') {
+    labels.forEach(l => l.classList.add('disabled'));
+    labels[q.correct].classList.add('correct');
+    labels[q.correct].querySelector('input').checked = true;
+    checkBtn.disabled = true;
+    msgEl.innerHTML = `<div class="msg ok">✓ Верно. ${escapeHtml(q.explain)}</div>`;
+  } else if (state === 'failed') {
+    labels.forEach(l => l.classList.add('disabled'));
+    labels[q.correct].classList.add('correct');
+    checkBtn.disabled = true;
+    msgEl.innerHTML = `<div class="msg err">Правильный ответ подсвечен зелёным.<br><span class="muted">${escapeHtml(q.explain)}</span></div>`;
+  } else {
+    checkBtn.disabled = true;
+    optsWrap.addEventListener('change', () => {
+      if (!card.classList.contains('locked')) checkBtn.disabled = false;
+    });
+  }
+
+  checkBtn.addEventListener('click', () => {
+    if (card.classList.contains('locked')) return;
+    const selected = card.querySelector(`input[name="q-${id}"]:checked`);
+    if (!selected) return;
+    const val = parseInt(selected.value, 10);
+
+    if (val === q.correct) {
+      labels.forEach(l => l.classList.add('disabled'));
+      labels[val].classList.add('correct');
+      card.classList.add('solved', 'locked');
+      progress[id] = 'solved';
+      saveProgress(progress);
+      updateProgressUI();
+      msgEl.innerHTML = `<div class="msg ok">✓ Верно. ${escapeHtml(q.explain)}</div>`;
+      checkBtn.disabled = true;
+      return;
+    }
+
+    const attempts = parseInt(card.dataset.attempts, 10) + 1;
+    card.dataset.attempts = attempts.toString();
+
+    if (attempts === 1) {
+      labels[val].classList.add('wrong');
+      msgEl.innerHTML = `<div class="msg err">Не совсем. Попробуй ещё раз.</div>`;
+      selected.checked = false;
+      setTimeout(() => labels[val].classList.remove('wrong'), 1500);
+      checkBtn.disabled = true;
+    } else {
+      labels.forEach(l => l.classList.add('disabled'));
+      labels[val].classList.add('wrong');
+      labels[q.correct].classList.add('correct');
+      card.classList.add('failed', 'locked');
+      progress[id] = 'failed';
+      saveProgress(progress);
+      updateProgressUI();
+      msgEl.innerHTML = `<div class="msg err">Правильный ответ подсвечен зелёным.<br><span class="muted">${escapeHtml(q.explain)}</span></div>`;
+      checkBtn.disabled = true;
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    delete progress[id];
+    saveProgress(progress);
+    updateProgressUI();
+    const fresh = buildQuizCard(id, num);
+    card.replaceWith(fresh);
+  });
+
+  return card;
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  QUIZ_ORDER.forEach((id, i) => {
+    container.appendChild(buildQuizCard(id, i + 1));
+  });
+}
+
+/* ============================================================
+   ЭТАП 2. ЗАДАЧИ НА КОД (6)
+   ============================================================ */
+const TASKS = [
+  {
+    id: 't1', title: 'Задача 1. Дата через точку',
+    desc: 'Выведи три числа через точку: 2025.09.15. Используй параметр sep.',
+    sample: '2025.09.15', input: [], expected: '2025.09.15',
+    hint: 'print("2025", "09", "15", sep=".")',
+    starter: ''
+  },
+  {
+    id: 't2', title: 'Задача 2. Время через двоеточие',
+    desc: 'Выведи три числа через двоеточие: 15:30:58. Используй параметр sep.',
+    sample: '15:30:58', input: [], expected: '15:30:58',
+    hint: 'print("15", "30", "58", sep=":")',
+    starter: ''
+  },
+  {
+    id: 't3', title: 'Задача 3. Всё вместе',
+    desc: 'Выведи три слова: one, two, three — через дефис и с восклицательным знаком в конце одной строки.',
+    sample: 'one-two-three!', input: [], expected: 'one-two-three!',
+    hint: 'Используй sep="-" и end="!" в одном print().',
+    starter: ''
+  },
+  {
+    id: 't4', title: 'Задача 4. Приветствие',
+    desc: 'Прочитай имя и выведи «Привет, Имя!» на одной строке. Восклицательный знак должен быть вплотную к имени — без пробела перед ним.',
+    sample: 'Ввод:\nАня\n\nВывод:\nПривет, Аня!',
+    input: ['Аня'], expected: 'Привет, Аня!',
+    hint: 'Через запятую print добавит пробел перед именем — это нужно. А вот после имени пробела быть не должно: используй end="!".',
+    starter: ''
+  },
+  {
+    id: 't5', title: 'Задача 5. Три слова через запятую',
+    desc: 'Прочитай три слова и выведи их через запятую с пробелом: слово1, слово2, слово3.',
+    sample: 'Ввод:\nкрасный\nзелёный\nсиний\n\nВывод:\nкрасный, зелёный, синий',
+    input: ['красный', 'зелёный', 'синий'],
+    expected: 'красный, зелёный, синий',
+    hint: 'Считай три переменные и выведи их через sep=", ".',
+    starter: ''
+  },
+  {
+    id: 't6', title: 'Задача 6. Склейка без пробела',
+    desc: 'Программа читает две строки и выводит их друг за другом без пробела — как одно слово.',
+    sample: 'Ввод:\nПри\nвет\n\nВывод:\nПривет',
+    input: ['При', 'вет'],
+    expected: 'Привет',
+    hint: 'Прочитай две переменные и выведи их через print(a, b, sep="").',
+    starter: ''
+  }
+];
+
+function buildTaskCard(task) {
+  const card = document.createElement('div');
+  card.className = 'task';
+  card.id = 'card-' + task.id;
+  const solved = progress[task.id] === 'solved';
+  if (solved) card.classList.add('done');
+
+  card.innerHTML = `
+    <h3>
+      <span>${escapeHtml(task.title)}</span>
+      <span class="check" data-checkmark>${solved ? '✓ решено' : ''}</span>
+    </h3>
+    <p class="desc">${escapeHtml(task.desc)}</p>
+    <div class="sample">${escapeHtml(task.sample)}</div>
+    <div data-editor></div>
+    <div class="btnrow">
+      <button class="primary" data-taskrun disabled>▶ Запустить</button>
+      <button class="success" data-check disabled>Проверить</button>
+      <button data-reset>Сбросить код</button>
+      <button data-hint>Подсказка</button>
+    </div>
+    <div class="io-panel" data-taskout><span class="dim">— вывод появится здесь —</span></div>
+    <div data-msg></div>
+  `;
+
+  const cm = makeEditor(card.querySelector('[data-editor]'), task.starter);
+  const outEl = card.querySelector('[data-taskout]');
+  const msgEl = card.querySelector('[data-msg]');
+
+  card.querySelector('[data-taskrun]').addEventListener('click', async () => {
+    outEl.innerHTML = '<span class="dim">Выполняется…</span>';
+    try {
+      const out = await runPython(cm.getValue(), task.input);
+      showOutput(outEl, out);
+    } catch (e) {
+      showOutput(outEl, e.message, true);
+    }
+  });
+
+  card.querySelector('[data-check]').addEventListener('click', async () => {
+    msgEl.innerHTML = '';
+    outEl.innerHTML = '<span class="dim">Проверяется…</span>';
+    let out;
+    try {
+      out = await runPython(cm.getValue(), task.input);
+    } catch (e) {
+      showOutput(outEl, e.message, true);
+      msgEl.innerHTML = `<div class="msg err">Ошибка запуска: ${escapeHtml(e.message)}</div>`;
+      return;
+    }
+    showOutput(outEl, out);
+    const got = normalize(out);
+    const want = normalize(task.expected);
+
+    if (got === want) {
+      card.classList.add('done');
+      card.querySelector('[data-checkmark]').textContent = '✓ решено';
+      progress[task.id] = 'solved';
+      saveProgress(progress);
+      updateProgressUI();
+      msgEl.innerHTML = `<div class="msg ok">Верно! Задача решена ✅</div>`;
+    } else {
+      msgEl.innerHTML = `
+        <div class="msg err">
+          Не совпадает.<br>
+          Ожидалось:<br><span class="mono">${escapeHtml(want)}</span><br>
+          Получилось:<br><span class="mono">${escapeHtml(got) || '(пусто)'}</span>
+        </div>`;
+    }
+  });
+
+  card.querySelector('[data-reset]').addEventListener('click', () => {
+    cm.setValue(task.starter);
+    clearOutput(outEl);
+    msgEl.innerHTML = '';
+  });
+
+  card.querySelector('[data-hint]').addEventListener('click', () => {
+    msgEl.innerHTML = `<div class="msg hint">💡 ${escapeHtml(task.hint)}</div>`;
+  });
+
+  return card;
+}
+
+function renderTasks() {
+  const container = document.getElementById('tasks-container');
+  TASKS.forEach(task => container.appendChild(buildTaskCard(task)));
+}
+
+/* ================= Навигация ================= */
+function buildNav() {
+  const nav = document.getElementById('lesson-nav');
+
+  const quizGroup = document.createElement('div');
+  quizGroup.className = 'nav-group';
+  quizGroup.innerHTML = '<span class="nav-group-label">Вопросы</span>';
+  QUIZ_ORDER.forEach((id, i) => {
+    const a = document.createElement('a');
+    a.href = '#quiz-' + id;
+    a.className = 'nav-item';
+    a.dataset.navQ = id;
+    a.title = `Вопрос ${i + 1}`;
+    a.textContent = String(i + 1);
+    quizGroup.appendChild(a);
+  });
+  nav.appendChild(quizGroup);
+
+  const taskGroup = document.createElement('div');
+  taskGroup.className = 'nav-group';
+  taskGroup.innerHTML = '<span class="nav-group-label">Задачи</span>';
+  TASKS.forEach((t, i) => {
+    const a = document.createElement('a');
+    a.href = '#card-' + t.id;
+    a.className = 'nav-item';
+    a.dataset.navT = t.id;
+    a.title = `Задача ${i + 1}: ${t.title}`;
+    a.textContent = String(i + 1);
+    taskGroup.appendChild(a);
+  });
+  nav.appendChild(taskGroup);
+}
+
+/* ================= Старт ================= */
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+if (!location.hash) window.scrollTo(0, 0);
+
+buildNav();
+renderQuiz();
+renderTasks();
+updateProgressUI();
+initPython();
+
+window.addEventListener('load', () => {
+  document.querySelectorAll('.CodeMirror').forEach(el => {
+    if (el.CodeMirror) el.CodeMirror.refresh();
+  });
+});
+</script>
+</body>
+</html>
